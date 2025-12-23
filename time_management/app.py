@@ -2,157 +2,133 @@ import streamlit as st
 import json
 import os
 from datetime import date
+import pandas as pd
+import plotly.express as px
+from icalendar import Calendar
 
-# =========================
-# データ保存用ファイル名
-# =========================
-DATA_FILE = "study_data.json"
-
-
-# =========================
-# データの初期作成
-# =========================
-def init_data_file():
-    if not os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "w", encoding="utf-8") as f:
-            json.dump(
-                {
-                    "periods": [],
-                    "tasks": [],
-                    "records": []
-                },
-                f,
-                ensure_ascii=False,
-                indent=2
-            )
+DATA_FILE = "data.json"
 
 
-# =========================
-# データの読み込み
-# =========================
 def load_data():
+    if not os.path.exists(DATA_FILE):
+        return {"periods": [], "tasks": [], "logs": [], "events": []}
     with open(DATA_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
-# =========================
-# データの保存
-# =========================
 def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
-# =========================
-# 初期化処理（重要）
-# =========================
-init_data_file()
 data = load_data()
 
-
-# =========================
-# タイトル
-# =========================
 st.title("📘 勉強管理アプリ")
 
-
-# =========================
-# ホーム画面（機能選択）
-# =========================
-menu = st.radio(
-    "機能を選んでください",
-    ["ホーム", "期間登録", "タスク登録", "完了入力"]
+menu = st.sidebar.radio(
+    "メニュー",
+    ["ホーム", "期間登録", "タスク登録", "完了入力", "カレンダー"]
 )
 
-
-# =========================
-# ホーム
-# =========================
+# --------------------
+# ホーム画面
+# --------------------
 if menu == "ホーム":
-    st.subheader("ホーム画面")
-    st.write("左のメニューから操作を選んでください。")
+    st.header("📊 進捗状況")
 
-    st.write("### 登録済み期間")
-    for p in data["periods"]:
-        st.write(f"- {p['name']}（{p['start']} ～ {p['end']}）")
+    if len(data["logs"]) == 0:
+        st.info("まだ完了データがありません")
+    else:
+        df = pd.DataFrame(data["logs"])
+        summary = df.groupby("task")["amount"].sum().reset_index()
+        fig = px.bar(summary, x="task", y="amount", title="タスク別進捗")
+        st.plotly_chart(fig, use_container_width=True)
 
-    st.write("### 登録済みタスク")
-    for t in data["tasks"]:
-        if t["amount"] is None:
-            st.write(f"- {t['name']}（量なし）")
-        else:
-            st.write(f"- {t['name']}（量：{t['amount']}）")
-
-
-# =========================
+# --------------------
 # 期間登録
-# =========================
+# --------------------
 elif menu == "期間登録":
-    st.subheader("期間登録")
+    st.header("📅 期間登録")
 
-    period_name = st.text_input("期間名")
-    start_date = st.date_input("開始日", value=date.today())
-    end_date = st.date_input("終了日", value=date.today())
+    name = st.text_input("期間名")
+    start = st.date_input("開始日")
+    end = st.date_input("終了日")
 
-    if st.button("期間を登録"):
+    if st.button("登録"):
         data["periods"].append({
-            "name": period_name,
-            "start": str(start_date),
-            "end": str(end_date)
+            "name": name,
+            "start": str(start),
+            "end": str(end)
         })
         save_data(data)
-        st.success("期間を登録しました！")
+        st.success("期間を登録しました")
 
-
-# =========================
+# --------------------
 # タスク登録
-# =========================
+# --------------------
 elif menu == "タスク登録":
-    st.subheader("タスク登録")
+    st.header("📝 タスク登録")
+
+    period_names = [p["name"] for p in data["periods"]]
+    period = st.selectbox("期間", period_names)
 
     task_name = st.text_input("タスク名")
-    amount_input = st.text_input("量（未入力でもOK）")
+    amount = st.number_input("量（任意）", min_value=0, step=1)
 
-    if st.button("タスクを登録"):
-        if amount_input == "":
-            amount = None
-        else:
-            amount = int(amount_input)
-
+    if st.button("登録"):
         data["tasks"].append({
             "name": task_name,
-            "amount": amount
+            "total": amount if amount > 0 else None,
+            "period": period
         })
         save_data(data)
-        st.success("タスクを登録しました！")
+        st.success("タスクを登録しました")
 
-
-# =========================
+# --------------------
 # 完了入力
-# =========================
+# --------------------
 elif menu == "完了入力":
-    st.subheader("完了入力")
+    st.header("✅ 完了入力")
 
-    if len(data["tasks"]) == 0:
-        st.info("先にタスクを登録してください。")
+    task_names = [t["name"] for t in data["tasks"]]
+    task = st.selectbox("タスク", task_names)
+
+    task_info = next(t for t in data["tasks"] if t["name"] == task)
+
+    if task_info["total"] is None:
+        amount = st.number_input("進捗（％）", min_value=0, max_value=100)
     else:
-        task_names = [t["name"] for t in data["tasks"]]
-        selected_task = st.selectbox("タスクを選択", task_names)
+        amount = st.number_input("完了量", min_value=0)
 
-        task_info = next(t for t in data["tasks"] if t["name"] == selected_task)
+    if st.button("登録"):
+        data["logs"].append({
+            "task": task,
+            "amount": amount,
+            "date": str(date.today())
+        })
+        save_data(data)
+        st.success("完了を記録しました")
 
-        if task_info["amount"] is None:
-            done = st.number_input("完了率（％）", min_value=0, max_value=100)
-            unit = "%"
-        else:
-            done = st.number_input("完了量", min_value=0)
-            unit = "量"
+# --------------------
+# カレンダー
+# --------------------
+elif menu == "カレンダー":
+    st.header("🗓 カレンダー")
 
-        if st.button("完了を記録"):
-            data["records"].append({
-                "task": selected_task,
-                "done": done,
-                "unit": unit
+    uploaded = st.file_uploader("iCalファイル(.ics)を読み込む", type="ics")
+
+    if uploaded:
+        cal = Calendar.from_ical(uploaded.read())
+        for event in cal.walk("VEVENT"):
+            data["events"].append({
+                "summary": str(event.get("summary")),
+                "start": str(event.get("dtstart").dt)
             })
-            save_data(data)
-            st.success("完了を記録しました！")
+        save_data(data)
+        st.success("iCalを読み込みました")
+
+    if len(data["events"]) == 0:
+        st.info("イベントがありません")
+    else:
+        df = pd.DataFrame(data["events"])
+        st.dataframe(df)
