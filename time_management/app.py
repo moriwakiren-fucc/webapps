@@ -8,6 +8,9 @@ from icalendar import Calendar
 DATA_FILE = "data.json"
 
 
+# --------------------
+# データ読み込み
+# --------------------
 def load_data():
     if not os.path.exists(DATA_FILE):
         return {
@@ -20,12 +23,20 @@ def load_data():
         return json.load(f)
 
 
+# --------------------
+# データ保存
+# --------------------
 def save_data(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
 
 data = load_data()
+
+# session_state 初期化（重要）
+if "ical_loaded" not in st.session_state:
+    st.session_state.ical_loaded = False
+
 
 st.title("📘 勉強管理アプリ")
 
@@ -35,7 +46,7 @@ menu = st.sidebar.radio(
 )
 
 # --------------------
-# ホーム画面
+# ホーム
 # --------------------
 if menu == "ホーム":
     st.header("📊 進捗状況")
@@ -126,15 +137,22 @@ elif menu == "カレンダー":
 
     uploaded = st.file_uploader("iCalファイル(.ics)", type="ics")
 
-    if uploaded:
-        cal = Calendar.from_ical(uploaded.read())
-        for event in cal.walk("VEVENT"):
-            data["events"].append({
-                "summary": str(event.get("summary")),
-                "start": str(event.get("dtstart").dt)
-            })
-        save_data(data)
-        st.success("iCalを読み込みました")
+    # ボタンを押した時だけ処理する
+    if uploaded and st.button("iCalを読み込む"):
+        if not st.session_state.ical_loaded:
+            cal = Calendar.from_ical(uploaded.read())
+
+            for event in cal.walk("VEVENT"):
+                data["events"].append({
+                    "summary": str(event.get("summary")),
+                    "start": str(event.get("dtstart").dt)
+                })
+
+            save_data(data)
+            st.session_state.ical_loaded = True
+            st.success("iCalを読み込みました")
+        else:
+            st.info("すでに読み込み済みです")
 
     if len(data["events"]) == 0:
         st.info("イベントがありません")
