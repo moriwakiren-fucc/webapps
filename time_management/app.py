@@ -10,18 +10,29 @@ DATA_FILE = "study_data.json"
 
 
 # =========================
+# データの初期作成
+# =========================
+def init_data_file():
+    if not os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "w", encoding="utf-8") as f:
+            json.dump(
+                {
+                    "periods": [],
+                    "tasks": [],
+                    "records": []
+                },
+                f,
+                ensure_ascii=False,
+                indent=2
+            )
+
+
+# =========================
 # データの読み込み
 # =========================
 def load_data():
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    else:
-        return {
-            "periods": [],
-            "tasks": [],
-            "records": []
-        }
+    with open(DATA_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 
 # =========================
@@ -33,8 +44,9 @@ def save_data(data):
 
 
 # =========================
-# 初期データ読み込み
+# 初期化処理（重要）
 # =========================
+init_data_file()
 data = load_data()
 
 
@@ -121,23 +133,26 @@ elif menu == "タスク登録":
 elif menu == "完了入力":
     st.subheader("完了入力")
 
-    task_names = [t["name"] for t in data["tasks"]]
-    selected_task = st.selectbox("タスクを選択", task_names)
-
-    task_info = next(t for t in data["tasks"] if t["name"] == selected_task)
-
-    if task_info["amount"] is None:
-        done = st.number_input("完了率（％）", min_value=0, max_value=100)
-        unit = "%"
+    if len(data["tasks"]) == 0:
+        st.info("先にタスクを登録してください。")
     else:
-        done = st.number_input("完了量", min_value=0)
-        unit = "量"
+        task_names = [t["name"] for t in data["tasks"]]
+        selected_task = st.selectbox("タスクを選択", task_names)
 
-    if st.button("完了を記録"):
-        data["records"].append({
-            "task": selected_task,
-            "done": done,
-            "unit": unit
-        })
-        save_data(data)
-        st.success("完了を記録しました！")
+        task_info = next(t for t in data["tasks"] if t["name"] == selected_task)
+
+        if task_info["amount"] is None:
+            done = st.number_input("完了率（％）", min_value=0, max_value=100)
+            unit = "%"
+        else:
+            done = st.number_input("完了量", min_value=0)
+            unit = "量"
+
+        if st.button("完了を記録"):
+            data["records"].append({
+                "task": selected_task,
+                "done": done,
+                "unit": unit
+            })
+            save_data(data)
+            st.success("完了を記録しました！")
