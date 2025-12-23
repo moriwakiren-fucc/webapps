@@ -45,7 +45,7 @@ st.title("📘 勉強管理アプリ")
 
 
 # =========================
-# ホーム画面（機能選択）
+# 機能選択
 # =========================
 menu = st.radio(
     "機能を選んでください",
@@ -61,15 +61,21 @@ if menu == "ホーム":
     st.write("左のメニューから操作を選んでください。")
 
     st.write("### 登録済み期間")
-    for p in data["periods"]:
-        st.write(f"- {p['name']}（{p['start']} ～ {p['end']}）")
+    if len(data["periods"]) == 0:
+        st.write("（まだ登録されていません）")
+    else:
+        for p in data["periods"]:
+            st.write(f"- {p['name']}（{p['start']} ～ {p['end']}）")
 
     st.write("### 登録済みタスク")
-    for t in data["tasks"]:
-        if t["amount"] is None:
-            st.write(f"- {t['name']}（量なし）")
-        else:
-            st.write(f"- {t['name']}（量：{t['amount']}）")
+    if len(data["tasks"]) == 0:
+        st.write("（まだ登録されていません）")
+    else:
+        for t in data["tasks"]:
+            if t["amount"] is None:
+                st.write(f"- {t['name']}（量なし）")
+            else:
+                st.write(f"- {t['name']}（量：{t['amount']}）")
 
 
 # =========================
@@ -83,13 +89,16 @@ elif menu == "期間登録":
     end_date = st.date_input("終了日", value=date.today())
 
     if st.button("期間を登録"):
-        data["periods"].append({
-            "name": period_name,
-            "start": str(start_date),
-            "end": str(end_date)
-        })
-        save_data(data)
-        st.success("期間を登録しました！")
+        if period_name == "":
+            st.warning("期間名を入力してください")
+        else:
+            data["periods"].append({
+                "name": period_name,
+                "start": str(start_date),
+                "end": str(end_date)
+            })
+            save_data(data)
+            st.success("期間を登録しました！")
 
 
 # =========================
@@ -102,17 +111,20 @@ elif menu == "タスク登録":
     amount_input = st.text_input("量（未入力でもOK）")
 
     if st.button("タスクを登録"):
-        if amount_input == "":
-            amount = None
+        if task_name == "":
+            st.warning("タスク名を入力してください")
         else:
-            amount = int(amount_input)
+            if amount_input == "":
+                amount = None
+            else:
+                amount = int(amount_input)
 
-        data["tasks"].append({
-            "name": task_name,
-            "amount": amount
-        })
-        save_data(data)
-        st.success("タスクを登録しました！")
+            data["tasks"].append({
+                "name": task_name,
+                "amount": amount
+            })
+            save_data(data)
+            st.success("タスクを登録しました！")
 
 
 # =========================
@@ -121,10 +133,19 @@ elif menu == "タスク登録":
 elif menu == "完了入力":
     st.subheader("完了入力")
 
+    # タスクが1件もない場合の安全処理
+    if len(data["tasks"]) == 0:
+        st.warning("先にタスクを登録してください")
+        st.stop()
+
     task_names = [t["name"] for t in data["tasks"]]
     selected_task = st.selectbox("タスクを選択", task_names)
 
-    task_info = next(t for t in data["tasks"] if t["name"] == selected_task)
+    task_info = None
+    for t in data["tasks"]:
+        if t["name"] == selected_task:
+            task_info = t
+            break
 
     if task_info["amount"] is None:
         done = st.number_input("完了率（％）", min_value=0, max_value=100)
