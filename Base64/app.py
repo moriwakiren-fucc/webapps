@@ -1,28 +1,19 @@
 import streamlit as st
 import base64
 import io
-import requests
 from PIL import Image
 
 st.set_page_config(page_title="Base64 Image Share App")
 st.title("Base64 画像共有アプリ")
 
 # =========================
-# クエリパラメータ取得（新APIのみ使用）
+# クエリパラメータ取得
 # =========================
 query_params = st.query_params
 code_param = query_params.get("code")
 
 # =========================
-# URL短縮関数
-# =========================
-def shorten_url(long_url):
-    api_url = "https://tinyurl.com/api-create.php"
-    response = requests.get(api_url, params={"url": long_url})
-    return response.text
-
-# =========================
-# 共有URLから画像を復元
+# URLから画像を復元
 # =========================
 if code_param:
     st.header("共有された画像")
@@ -52,14 +43,12 @@ if uploaded_file:
     image_bytes = uploaded_file.read()
     encoded = base64.urlsafe_b64encode(image_bytes).decode("utf-8")
 
-    # 現在のアプリURLを取得
-    base_url = st.request.url_root.rstrip("/")
-
-    full_url = f"{base_url}?code={encoded}"
-    short_url = shorten_url(full_url)
+    # クエリパラメータを更新（URLが自動で変わる）
+    st.query_params.clear()
+    st.query_params["code"] = encoded
 
     st.image(image_bytes)
-    st.text_input("短縮URL（コピー可）", short_url)
+    st.success("ブラウザのURLが共有URLです（そのままコピーしてください）")
 
 st.divider()
 
