@@ -21,7 +21,7 @@ QUALITY_MIN = 30
 query_params = st.query_params
 code_param = query_params.get("code")
 
-# ★ 重要：list → str に変換
+# list → str
 if isinstance(code_param, list):
     code_param = code_param[0]
 
@@ -32,15 +32,21 @@ if code_param:
     st.header("共有された画像")
 
     try:
+        # ★ Base64パディング補正
+        missing_padding = len(code_param) % 4
+        if missing_padding:
+            code_param += "=" * (4 - missing_padding)
+
         compressed_bytes = base64.urlsafe_b64decode(code_param)
         image_bytes = gzip.decompress(compressed_bytes)
         image = Image.open(io.BytesIO(image_bytes))
+
         st.image(image, use_container_width=True)
         st.success("画像を復元しました")
 
     except Exception as e:
         st.error("画像の復元に失敗しました")
-        st.exception(e)  # ← デバッグ用（後で消してOK）
+        st.exception(e)
 
 st.divider()
 
