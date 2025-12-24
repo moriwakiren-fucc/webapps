@@ -5,7 +5,15 @@ import io
 from PIL import Image
 
 st.set_page_config(page_title="Base64 GZIP Image Share App")
-st.title("Base64 + GZIP 画像共有アプリ")
+st.title("Base64 + GZIP 画像共有アプリ（自動圧縮）")
+
+# =========================
+# 設定値
+# =========================
+MAX_BYTES = 80_000        # 目標サイズ（80KB）
+MAX_WIDTH = 800           # 最大横幅
+QUALITY_START = 85
+QUALITY_MIN = 30
 
 # =========================
 # クエリパラメータ取得
@@ -14,7 +22,7 @@ query_params = st.query_params
 code_param = query_params.get("code")
 
 # =========================
-# URL → Base64デコード → GZIP解凍 → 画像表示
+# URL → 復元
 # =========================
 if code_param:
     st.header("共有された画像")
@@ -32,7 +40,7 @@ if code_param:
 st.divider()
 
 # =========================
-# 画像アップロード → GZIP圧縮 → Base64 → URL生成
+# 画像アップロード → 自動圧縮
 # =========================
 st.header("画像をアップロードして共有URLを作成")
 
@@ -42,17 +50,37 @@ uploaded_file = st.file_uploader(
 )
 
 if uploaded_file:
-    image_bytes = uploaded_file.read()
+    original = Image.open(uploaded_file).convert("RGB")
 
-    # GZIP圧縮
-    compressed_bytes = gzip.compress(image_bytes)
+    # 解像度を縮小
+    if original.width > MAX_WIDTH:
+        ratio = MAX_WIDTH / original.width
+        new_size = (MAX_WIDTH, int(original.height * ratio))
+        original = original.resize(new_size, Image.LANCZOS)
 
-    # Base64エンコード（URL安全）
-    encoded = base64.urlsafe_b64encode(compressed_bytes).decode("utf-8")
+    # JPEG再エンコード（画質を下げていく）
+    jpeg_bytes = None
+    for quality in range(QUALITY_START, QUALITY_MIN - 1, -5):
+        buffer = io.BytesIO()
+        original.save(buffer, format="JPEG", quality=quality, optimize=True)
+        data = buffer.getvalue()
 
-    # URLを更新（これが共有URL）
-    st.query_params.clear()
-    st.query_params["code"] = encoded
+        if len(data) <= MAX_BYTES:
+            jpeg_bytes = data
+            break
 
-    st.image(image_bytes)
-    st.success("ブラウザのURLが共有URLです（コピーしてください）")
+    if jpeg_bytes is None:
+        st.error("サイズを十分に小さくできませんでした")
+    else:
+        # GZIP圧縮
+        compressed_bytes = gzip.compress(jpeg_bytes)
+
+        # Base64エンコード
+        encoded = base64.urlsafe_b64encode(compressed_bytes).decode("utf-8")
+
+        # URL更新
+        st.query_params.clear()
+        st.query_params["code"] = encoded
+
+        st.image(jpeg_bytes)
+        st.success("自動圧縮完了。ブラウザURLが共有URLです")
