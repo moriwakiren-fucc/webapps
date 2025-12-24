@@ -8,18 +8,22 @@ st.set_page_config(page_title="Base64 GZIP Image Share App")
 st.title("Base64 + GZIP 画像共有アプリ（自動圧縮）")
 
 # =========================
-# 設定値
+# 設定
 # =========================
-MAX_BYTES = 80_000        # 目標サイズ（80KB）
-MAX_WIDTH = 800           # 最大横幅
+MAX_BYTES = 80_000
+MAX_WIDTH = 800
 QUALITY_START = 85
 QUALITY_MIN = 30
 
 # =========================
-# クエリパラメータ取得
+# クエリ取得
 # =========================
 query_params = st.query_params
 code_param = query_params.get("code")
+
+# ★ 重要：list → str に変換
+if isinstance(code_param, list):
+    code_param = code_param[0]
 
 # =========================
 # URL → 復元
@@ -34,13 +38,14 @@ if code_param:
         st.image(image, use_container_width=True)
         st.success("画像を復元しました")
 
-    except Exception:
+    except Exception as e:
         st.error("画像の復元に失敗しました")
+        st.exception(e)  # ← デバッグ用（後で消してOK）
 
 st.divider()
 
 # =========================
-# 画像アップロード → 自動圧縮
+# アップロード → 自動圧縮
 # =========================
 st.header("画像をアップロードして共有URLを作成")
 
@@ -52,13 +57,13 @@ uploaded_file = st.file_uploader(
 if uploaded_file:
     original = Image.open(uploaded_file).convert("RGB")
 
-    # 解像度を縮小
+    # 解像度縮小
     if original.width > MAX_WIDTH:
         ratio = MAX_WIDTH / original.width
         new_size = (MAX_WIDTH, int(original.height * ratio))
         original = original.resize(new_size, Image.LANCZOS)
 
-    # JPEG再エンコード（画質を下げていく）
+    # JPEG再エンコード（画質調整）
     jpeg_bytes = None
     for quality in range(QUALITY_START, QUALITY_MIN - 1, -5):
         buffer = io.BytesIO()
@@ -72,13 +77,9 @@ if uploaded_file:
     if jpeg_bytes is None:
         st.error("サイズを十分に小さくできませんでした")
     else:
-        # GZIP圧縮
         compressed_bytes = gzip.compress(jpeg_bytes)
-
-        # Base64エンコード
         encoded = base64.urlsafe_b64encode(compressed_bytes).decode("utf-8")
 
-        # URL更新
         st.query_params.clear()
         st.query_params["code"] = encoded
 
