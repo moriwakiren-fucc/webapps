@@ -10,12 +10,29 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 
 st.title("📚 教科書スキャン（iPad対応）")
 
-st.write("📷 ページをめくって、撮影ボタンを押してください")
+st.write("📷 ページをめくって、ボタンを押すだけ")
 
-# ===== 反転スイッチ =====
-flip_image = st.toggle("🔄 画像を左右反転する", value=False)
+# -------------------------
+# カメラ向きの状態管理
+# -------------------------
+if "camera_mode" not in st.session_state:
+    # 初期状態は背面カメラ
+    st.session_state.camera_mode = "environment"
 
-# 現在の保存枚数
+# 切り替えボタン
+if st.button("🔄 前面 / 背面 カメラ切り替え"):
+    if st.session_state.camera_mode == "environment":
+        st.session_state.camera_mode = "user"
+    else:
+        st.session_state.camera_mode = "environment"
+
+# 現在のカメラ表示
+if st.session_state.camera_mode == "environment":
+    st.info("📷 背面カメラ使用中")
+else:
+    st.info("🤳 前面カメラ使用中")
+
+# 既存ページ数取得
 page_count = len(os.listdir(SAVE_DIR))
 
 def scan_like_process(img):
@@ -32,8 +49,12 @@ def scan_like_process(img):
     )
     return th
 
-# iPad対応カメラ入力
-camera_input = st.camera_input("ページを撮影")
+# カメラ入力（前面 / 背面 切り替え対応）
+camera_input = st.camera_input(
+    "ページを撮影",
+    facing_mode=st.session_state.camera_mode,
+    key=st.session_state.camera_mode
+)
 
 if camera_input is not None:
     # PIL形式で読み込み
@@ -41,10 +62,6 @@ if camera_input is not None:
 
     # OpenCV形式へ変換
     frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-
-    # ===== 反転処理 =====
-    if flip_image:
-        frame = cv2.flip(frame, 1)
 
     # スキャン風加工
     processed = scan_like_process(frame)
@@ -58,7 +75,7 @@ if camera_input is not None:
 
     st.success(f"{page_count} ページ保存しました")
 
-    # プレビュー表示
+    # プレビュー
     st.image(
         processed,
         caption="スキャン後プレビュー",
