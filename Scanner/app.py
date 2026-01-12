@@ -9,28 +9,21 @@ SAVE_DIR = "pages"
 os.makedirs(SAVE_DIR, exist_ok=True)
 
 st.title("📚 教科書スキャン（iPad対応）")
-
-st.write("📷 ページをめくって、ボタンを押すだけ")
+st.write("📷 ページをめくって、撮影ボタンを押してください")
 
 # -------------------------
-# カメラ向きの状態管理
+# カメラ向き（UI用）
 # -------------------------
-if "camera_mode" not in st.session_state:
-    # 初期状態は背面カメラ
-    st.session_state.camera_mode = "environment"
+camera_mode = st.radio(
+    "使用中のカメラ",
+    ["背面カメラ", "前面カメラ"],
+    horizontal=True
+)
 
-# 切り替えボタン
-if st.button("🔄 前面 / 背面 カメラ切り替え"):
-    if st.session_state.camera_mode == "environment":
-        st.session_state.camera_mode = "user"
-    else:
-        st.session_state.camera_mode = "environment"
-
-# 現在のカメラ表示
-if st.session_state.camera_mode == "environment":
-    st.info("📷 背面カメラ使用中")
+if camera_mode == "背面カメラ":
+    st.info("📷 iPadのカメラUIで『背面』を選択してください")
 else:
-    st.info("🤳 前面カメラ使用中")
+    st.info("🤳 iPadのカメラUIで『前面』を選択してください")
 
 # 既存ページ数取得
 page_count = len(os.listdir(SAVE_DIR))
@@ -49,12 +42,8 @@ def scan_like_process(img):
     )
     return th
 
-# カメラ入力（前面 / 背面 切り替え対応）
-camera_input = st.camera_input(
-    "ページを撮影",
-    facing_mode=st.session_state.camera_mode,
-    key=st.session_state.camera_mode
-)
+# カメラ入力（Streamlit公式）
+camera_input = st.camera_input("ページを撮影")
 
 if camera_input is not None:
     # PIL形式で読み込み
