@@ -10,9 +10,12 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 
 st.title("📚 教科書スキャン（iPad対応）")
 
-st.write("📷 ページをめくって、ボタンを押すだけ")
+st.write("📷 ページをめくって、撮影ボタンを押してください")
 
-# 現在の保存枚数を取得
+# ===== 反転スイッチ =====
+flip_image = st.toggle("🔄 画像を左右反転する", value=False)
+
+# 現在の保存枚数
 page_count = len(os.listdir(SAVE_DIR))
 
 def scan_like_process(img):
@@ -29,15 +32,19 @@ def scan_like_process(img):
     )
     return th
 
-# カメラ入力（iPad対応）
+# iPad対応カメラ入力
 camera_input = st.camera_input("ページを撮影")
 
 if camera_input is not None:
-    # PIL形式で画像を読み込み
+    # PIL形式で読み込み
     image = Image.open(camera_input)
 
-    # OpenCV形式に変換
+    # OpenCV形式へ変換
     frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+
+    # ===== 反転処理 =====
+    if flip_image:
+        frame = cv2.flip(frame, 1)
 
     # スキャン風加工
     processed = scan_like_process(frame)
@@ -52,4 +59,8 @@ if camera_input is not None:
     st.success(f"{page_count} ページ保存しました")
 
     # プレビュー表示
-    st.image(processed, caption="スキャン後プレビュー", use_container_width=True)
+    st.image(
+        processed,
+        caption="スキャン後プレビュー",
+        use_container_width=True
+    )
