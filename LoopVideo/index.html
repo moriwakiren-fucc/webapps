@@ -27,7 +27,6 @@ body {
   margin-bottom: 24px;
 }
 
-/* ===== スライダー ===== */
 .slider-area {
   position: relative;
   height: 64px;
@@ -86,7 +85,6 @@ body {
 
 <hr>
 
-<h3>動画URL</h3>
 <div id="inputs">
   <input placeholder="YouTube URL 1"><br>
   <input placeholder="YouTube URL 2"><br>
@@ -96,17 +94,6 @@ body {
   <button onclick="loadVideos()">読み込み</button>
 </div>
 
-<hr>
-
-<h3>タイマー</h3>
-<input id="hour" type="number" min="0" placeholder="h"> 時間
-<input id="min" type="number" min="0" placeholder="m"> 分
-<br>
-<label>
-  <input id="stopAfter" type="checkbox">
-  指定時間後に自動停止
-</label>
-
 <script src="https://www.youtube.com/iframe_api"></script>
 
 <script>
@@ -114,18 +101,7 @@ let players = [];
 let blocks = [];
 let ranges = [];
 let current = 0;
-let timerId = null;
-const STORAGE_KEY = "yt_loop_urls";
 
-/* 秒 → hh:mm:ss */
-function fmt(t) {
-  const h = String(Math.floor(t/3600)).padStart(2,"0");
-  const m = String(Math.floor(t%3600/60)).padStart(2,"0");
-  const s = String(Math.floor(t%60)).padStart(2,"0");
-  return `${h}:${m}:${s}`;
-}
-
-/* URL → ID（youtu.be対応） */
 function extractID(url) {
   try {
     const u = new URL(url);
@@ -135,139 +111,117 @@ function extractID(url) {
   return null;
 }
 
-/* 保存 */
-function saveURLs() {
-  const v = [...document.querySelectorAll("#inputs input")].map(i => i.value);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(v));
-}
-
-/* 復元 */
-function restoreURLs() {
-  const s = localStorage.getItem(STORAGE_KEY);
-  if (!s) return;
-  JSON.parse(s).forEach((v,i)=>{
-    document.querySelectorAll("#inputs input")[i].value = v || "";
-  });
-}
-
-document.addEventListener("input", e=>{
-  if(e.target.closest("#inputs")) saveURLs();
-});
-
-/* 読み込み */
 function loadVideos() {
-  saveURLs();
-  document.getElementById("player-area").innerHTML="";
-  players=[]; blocks=[]; ranges=[];
-  current=0;
+  const areaRoot = document.getElementById("player-area");
+  areaRoot.innerHTML = "";
 
-  const urls=[...document.querySelectorAll("#inputs input")]
-    .map(i=>i.value).filter(Boolean);
+  players = [];
+  blocks = [];
+  ranges = [];
+  current = 0;
 
-  urls.forEach((url,i)=>{
-    const id=extractID(url);
-    if(!id) return;
+  const urls = [...document.querySelectorAll("#inputs input")]
+    .map(i => i.value)
+    .filter(Boolean);
 
-    const block=document.createElement("div");
-    block.className="video";
+  urls.forEach((url, i) => {
+    const id = extractID(url);
+    if (!id) return;
 
-    const pdiv=document.createElement("div");
-    const area=document.createElement("div");
-    area.className="slider-area";
+    const block = document.createElement("div");
+    block.className = "video";
 
-    const bar=document.createElement("div");
-    bar.className="range-bar";
+    const playerDiv = document.createElement("div");
 
-    const s=document.createElement("input");
-    s.type="range";
-    const e=document.createElement("input");
-    e.type="range";
+    const area = document.createElement("div");
+    area.className = "slider-area";
 
-    const sl=document.createElement("div");
-    sl.className="time-label";
-    const el=document.createElement("div");
-    el.className="time-label";
+    const bar = document.createElement("div");
+    bar.className = "range-bar";
 
-    area.append(bar,s,e,sl,el);
-    block.append(pdiv,area);
-    player-area.appendChild(block);
+    const start = document.createElement("input");
+    start.type = "range";
 
-    blocks[i]=block;
-    ranges[i]=[0,0];
+    const end = document.createElement("input");
+    end.type = "range";
 
-    players[i]=new YT.Player(pdiv,{
-      videoId:id,
-      playerVars:{playsinline:1},
-      events:{
-        onReady:ev=>{
-          const d=Math.floor(ev.target.getDuration());
-          s.max=e.max=d;
-          e.value=d;
-          ranges[i]=[0,d];
-          ui();
-          if(i===0) play();
+    const sl = document.createElement("div");
+    sl.className = "time-label";
+
+    const el = document.createElement("div");
+    el.className = "time-label";
+
+    area.append(bar, start, end, sl, el);
+    block.append(playerDiv, area);
+
+    /* ★ 修正点：正しくDOMに追加 */
+    areaRoot.appendChild(block);
+
+    blocks[i] = block;
+    ranges[i] = [0, 0];
+
+    players[i] = new YT.Player(playerDiv, {
+      videoId: id,
+      playerVars: { playsinline: 1 },
+      events: {
+        onReady: e => {
+          const d = Math.floor(e.target.getDuration());
+          start.max = end.max = d;
+          end.value = d;
+          ranges[i] = [0, d];
+          updateUI();
+          if (i === 0) playCurrent();
         },
-        onStateChange:ev=>{
-          if(ev.data===0) next();
-          if(ev.data===1) loop();
+        onStateChange: e => {
+          if (i === current && e.data === 1) loop();
         }
       }
     });
 
-    function ui(){
-      const[a,b]=ranges[i];
-      const w=area.clientWidth;
-      bar.style.left=a/e.max*w+"px";
-      bar.style.width=(b-a)/e.max*w+"px";
-      sl.textContent=fmt(a);
-      el.textContent=fmt(b);
-      sl.style.left=a/e.max*w+"px";
-      el.style.left=b/e.max*w+"px";
+    function updateUI() {
+      const [a, b] = ranges[i];
+      const w = area.clientWidth;
+      bar.style.left = (a / end.max * w) + "px";
+      bar.style.width = ((b - a) / end.max * w) + "px";
+      sl.textContent = format(a);
+      el.textContent = format(b);
+      sl.style.left = (a / end.max * w) + "px";
+      el.style.left = (b / end.max * w) + "px";
     }
 
-    s.oninput=()=>{if(+s.value>+e.value)s.value=e.value;ranges[i][0]=+s.value;ui();}
-    e.oninput=()=>{if(+e.value<+s.value)e.value=s.value;ranges[i][1]=+e.value;ui();}
-  });
+    start.oninput = () => {
+      if (+start.value > +end.value) start.value = end.value;
+      ranges[i][0] = +start.value;
+      updateUI();
+    };
 
-  startTimer();
+    end.oninput = () => {
+      if (+end.value < +start.value) end.value = start.value;
+      ranges[i][1] = +end.value;
+      updateUI();
+    };
+  });
 }
 
-function play(){
-  blocks.forEach((b,i)=>b.style.display=i===current?"block":"none");
-  players[current].seekTo(ranges[current][0],true);
+function playCurrent() {
+  blocks.forEach((b, i) => b.style.display = i === current ? "block" : "none");
   players[current].playVideo();
 }
 
-function next(){
-  current=(current+1)%players.length;
-  play();
-}
-
-function loop(){
-  const p=players[current];
-  if(p.getCurrentTime()>=ranges[current][1]){
-    p.seekTo(ranges[current][0],true);
+function loop() {
+  const p = players[current];
+  if (p.getCurrentTime() >= ranges[current][1]) {
+    p.seekTo(ranges[current][0], true);
   }
   requestAnimationFrame(loop);
 }
 
-/* タイマー */
-function startTimer(){
-  if(timerId) clearTimeout(timerId);
-  const h=+hour.value||0;
-  const m=+min.value||0;
-  const t=(h*3600+m*60)*1000;
-  if(t<=0) return;
-
-  timerId=setTimeout(()=>{
-    new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg").play();
-    if(stopAfter.checked){
-      players[current]?.stopVideo();
-    }
-  },t);
+function format(t) {
+  const h = String(Math.floor(t / 3600)).padStart(2, "0");
+  const m = String(Math.floor((t % 3600) / 60)).padStart(2, "0");
+  const s = String(Math.floor(t % 60)).padStart(2, "0");
+  return `${h}:${m}:${s}`;
 }
-
-window.addEventListener("load",restoreURLs);
 </script>
 
 </body>
