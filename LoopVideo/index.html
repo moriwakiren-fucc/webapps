@@ -2,82 +2,58 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>YouTube 自動ループ再生</title>
+<title>YouTube 自動ループ</title>
 
 <style>
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  overflow-x: hidden;
+html,body{
+  margin:0;
+  padding:0;
+  width:100%;
+  overflow-x:hidden;
+  font-family:sans-serif;
 }
 
-body {
-  font-family: sans-serif;
-  padding: 16px;
-  box-sizing: border-box;
+.slider{
+  margin-top:6px;
+  position:relative;
+  height:60px;
 }
 
-.video-player {
-  margin-bottom: 24px;
+.range-bar{
+  position:absolute;
+  top:22px;
+  height:4px;
+  background:#1e88e5;
+  box-shadow:0 0 6px #1e88e5;
+  border-radius:2px;
 }
 
-/* ===== URLブロック ===== */
-.url-block {
-  margin-bottom: 16px;
+.slider input[type=range]{
+  position:absolute;
+  top:16px;
+  width:100%;
+  background:none;
+  pointer-events:none;
+  -webkit-appearance:none;
 }
 
-.url-block input {
-  width: 100%;
+.slider input::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  pointer-events:auto;
+  width:14px;
+  height:14px;
+  border-radius:50%;
+  background:#fff;
+  border:2px solid #1e88e5;
+  margin-top:-5px;
 }
 
-/* ===== スライダー ===== */
-.slider-area {
-  position: relative;
-  height: 64px;
-  margin-top: 8px;
-}
-
-.range-bar {
-  position: absolute;
-  top: 23px;
-  height: 4px;
-  background: #1e88e5;
-  border-radius: 2px;
-  box-shadow: 0 0 6px #1e88e5;
-}
-
-.slider-area input[type=range] {
-  position: absolute;
-  top: 16px;
-  width: 100%;
-  pointer-events: none;
-  background: none;
-  -webkit-appearance: none;
-}
-
-.slider-area input[type=range]::-webkit-slider-runnable-track {
-  height: 4px;
-  background: transparent;
-}
-
-.slider-area input[type=range]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  pointer-events: auto;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #fff;
-  border: 2px solid #1e88e5;
-  margin-top: -5px;
-}
-
-.time-label {
-  position: absolute;
-  top: 40px;
-  font-size: 12px;
-  transform: translateX(-50%);
-  white-space: nowrap;
+.time{
+  position:absolute;
+  top:40px;
+  font-size:12px;
+  transform:translateX(-50%);
+  white-space:nowrap;
 }
 </style>
 </head>
@@ -86,91 +62,72 @@ body {
 
 <h2>YouTube自動ループ再生</h2>
 
-<!-- プレイヤーは1つだけ -->
-<div class="video-player">
-  <div id="player"></div>
-</div>
-
+<div id="player"></div>
 <hr>
 
-<h3>動画と再生区間</h3>
 <div id="list"></div>
 
-<button onclick="loadVideos()">読み込み</button>
-
-<hr>
-
-<h3>タイマー</h3>
-<input id="hour" type="number" min="0" placeholder="h"> 時間
-<input id="minute" type="number" min="0" placeholder="m"> 分
-<div>残り時間：<span id="remain">--:--:--</span></div>
-<label>
-  <input id="stopAfter" type="checkbox">
-  指定時間経過後に自動停止
-</label>
+<button onclick="start()">再生開始</button>
 
 <script src="https://www.youtube.com/iframe_api"></script>
-
 <script>
-const MAX = 5;
+const MAX=5;
 let player;
-let videos = [];
-let current = 0;
-let timerId, remainId;
+let data=[];
+let current=0;
 
 /* 秒 → hh:mm:ss */
-function fmt(t) {
-  const h = String(Math.floor(t/3600)).padStart(2,"0");
-  const m = String(Math.floor(t%3600/60)).padStart(2,"0");
-  const s = String(Math.floor(t%60)).padStart(2,"0");
+function fmt(t){
+  const h=String(t/3600|0).padStart(2,"0");
+  const m=String(t%3600/60|0).padStart(2,"0");
+  const s=String(t%60|0).padStart(2,"0");
   return `${h}:${m}:${s}`;
 }
 
 /* URL → ID */
-function extractID(url) {
-  try {
-    const u = new URL(url);
-    if (u.hostname === "youtu.be") return u.pathname.slice(1);
-    if (u.searchParams.get("v")) return u.searchParams.get("v");
-  } catch {}
-  return null;
+function getID(url){
+  try{
+    const u=new URL(url);
+    if(u.hostname==="youtu.be") return u.pathname.slice(1);
+    return u.searchParams.get("v");
+  }catch{return null;}
 }
 
 /* UI生成 */
-for (let i=0;i<MAX;i++) {
-  const b = document.createElement("div");
-  b.className = "url-block";
-
-  b.innerHTML = `
+for(let i=0;i<MAX;i++){
+  const d=document.createElement("div");
+  d.innerHTML=`
     <input placeholder="YouTube URL ${i+1}">
-    <div class="slider-area">
+    <div class="slider">
       <div class="range-bar"></div>
-      <input type="range">
-      <input type="range">
-      <div class="time-label"></div>
-      <div class="time-label"></div>
+      <input type="range" value="0">
+      <input type="range" value="0">
+      <div class="time"></div>
+      <div class="time"></div>
     </div>
   `;
-  list.appendChild(b);
+  list.appendChild(d);
 
-  videos.push({
-    input: b.querySelector("input"),
-    bar: b.querySelector(".range-bar"),
-    start: b.querySelectorAll("input[type=range]")[0],
-    end: b.querySelectorAll("input[type=range]")[1],
-    sl: b.querySelectorAll(".time-label")[0],
-    el: b.querySelectorAll(".time-label")[1],
-    range: [0,0],
-    id: null
+  const input=d.querySelector("input");
+  input.value=localStorage.getItem("url"+i)||"";
+  input.oninput=()=>localStorage.setItem("url"+i,input.value);
+
+  data.push({
+    input,
+    bar:d.querySelector(".range-bar"),
+    s:d.querySelectorAll("input[type=range]")[0],
+    e:d.querySelectorAll("input[type=range]")[1],
+    sl:d.querySelectorAll(".time")[0],
+    el:d.querySelectorAll(".time")[1],
+    start:0,end:0,id:null
   });
 }
 
-/* プレイヤー準備 */
-function onYouTubeIframeAPIReady() {
-  player = new YT.Player("player", {
+/* プレイヤー */
+function onYouTubeIframeAPIReady(){
+  player=new YT.Player("player",{
     playerVars:{playsinline:1},
     events:{
-      onReady:()=>{},
       onStateChange:e=>{
         if(e.data===1) loop();
         if(e.data===0) next();
@@ -179,84 +136,72 @@ function onYouTubeIframeAPIReady() {
   });
 }
 
-/* 読み込み */
-function loadVideos() {
-  videos.forEach(v=>{
-    v.id = extractID(v.input.value);
-  });
-  current = 0;
+/* 再生開始 */
+function start(){
+  data.forEach(v=>v.id=getID(v.input.value));
+  current=0;
   play();
-  startTimer();
 }
 
 /* 再生 */
-function play() {
-  const v = videos[current];
-  if (!v.id) return;
-  player.loadVideoById(v.id, v.range[0]);
+function play(){
+  const v=data[current];
+  if(!v.id) return;
+  player.loadVideoById(v.id);
+  setTimeout(initSlider,800);
 }
 
-/* 次へ */
-function next() {
-  current = (current + 1) % videos.length;
-  play();
+/* スライダー初期化（重要） */
+function initSlider(){
+  const d=player.getDuration();
+  if(!d) return;
+
+  const v=data[current];
+  v.start=0;
+  v.end=d;
+
+  v.s.max=v.e.max=d;
+  v.e.value=d;
+
+  update(v);
+
+  v.s.oninput=()=>{
+    if(+v.s.value>+v.e.value) v.s.value=v.e.value;
+    v.start=+v.s.value;
+    update(v);
+  };
+
+  v.e.oninput=()=>{
+    if(+v.e.value<+v.s.value) v.e.value=v.s.value;
+    v.end=+v.e.value;
+    update(v);
+  };
+}
+
+/* 表示更新 */
+function update(v){
+  const d=player.getDuration();
+  v.bar.style.left=v.start/d*100+"%";
+  v.bar.style.width=(v.end-v.start)/d*100+"%";
+  v.sl.textContent=fmt(v.start);
+  v.el.textContent=fmt(v.end);
+  v.sl.style.left=v.start/d*100+"%";
+  v.el.style.left=v.end/d*100+"%";
 }
 
 /* ループ */
-function loop() {
-  const v = videos[current];
-  if (player.getCurrentTime() >= v.range[1]) {
-    player.seekTo(v.range[0], true);
+function loop(){
+  const v=data[current];
+  if(player.getCurrentTime()>=v.end){
+    player.seekTo(v.start,true);
   }
   requestAnimationFrame(loop);
 }
 
-/* スライダーUI更新 */
-videos.forEach(v=>{
-  function update() {
-    const d = player.getDuration() || 1;
-    v.bar.style.left = v.range[0]/d*100+"%";
-    v.bar.style.width = (v.range[1]-v.range[0])/d*100+"%";
-    v.sl.textContent = fmt(v.range[0]);
-    v.el.textContent = fmt(v.range[1]);
-    v.sl.style.left = v.bar.style.left;
-    v.el.style.left = (v.range[1]/d*100)+"%";
-  }
-
-  v.start.oninput=()=>{
-    if(+v.start.value>+v.end.value) v.start.value=v.end.value;
-    v.range[0]=+v.start.value;
-    update();
-  };
-  v.end.oninput=()=>{
-    if(+v.end.value<+v.start.value) v.end.value=v.start.value;
-    v.range[1]=+v.end.value;
-    update();
-  };
-});
-
-/* ===== タイマー ===== */
-function startTimer() {
-  clearTimeout(timerId);
-  clearInterval(remainId);
-
-  const h = +hour.value||0;
-  const m = +minute.value||0;
-  let sec = h*3600 + m*60;
-  if (sec<=0) return;
-
-  remain.textContent = fmt(sec);
-
-  remainId = setInterval(()=>{
-    sec--;
-    remain.textContent = fmt(sec);
-    if (sec<=0) clearInterval(remainId);
-  },1000);
-
-  timerId = setTimeout(()=>{
-    new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg").play();
-    if (stopAfter.checked) player.stopVideo();
-  }, sec*1000);
+/* 次 */
+function next(){
+  current=(current+1)%data.length;
+  play();
 }
 </script>
 
