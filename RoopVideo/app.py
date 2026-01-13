@@ -6,14 +6,18 @@ st.set_page_config(page_title="YouTube自動ループ再生", layout="centered")
 st.title("📺 YouTube自動ループ再生ツール")
 
 # =============================
-# ① プレイヤー＆スライダー（最上部）
+# URL入力（先）
 # =============================
-
+st.subheader("🔗 YouTube URL（最大5本）")
 urls = []
 for i in range(5):
-    urls.append("")  # 後でURLが入る前提で枠だけ確保
+    urls.append(st.text_input(f"YouTube URL {i+1}", ""))
 
 urls_js = json.dumps(urls)
+
+# =============================
+# プレイヤー＋スライダー（後）
+# =============================
 
 html_code = """
 <!DOCTYPE html>
@@ -39,13 +43,13 @@ html_code = """
 </head>
 <body>
 
-<!-- ★ プレイヤーとスライダーはここが最上部 -->
+<!-- タイトル直下に表示される -->
 <div id="container"></div>
 
 <script src="https://www.youtube.com/iframe_api"></script>
 
 <script>
-let urls = __URLS__;
+const urls = __URLS__;
 let players = [];
 let blocks = [];
 let ranges = [];
@@ -145,12 +149,3 @@ function monitor() {
 
 html_code = html_code.replace("__URLS__", urls_js)
 html(html_code, height=360)
-
-# =============================
-# ② URL入力欄（下）
-# =============================
-
-st.subheader("🔗 YouTube URL（最大5本）")
-for i in range(5):
-    urls[i] = st.text_input(f"YouTube URL {i+1}", "")
-
