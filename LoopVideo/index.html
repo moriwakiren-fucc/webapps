@@ -25,56 +25,49 @@ body {
 .video {
   display: none;
   margin-bottom: 24px;
-  max-width: 100%;
 }
 
 /* ===== スライダー ===== */
 .slider-area {
   position: relative;
-  margin-top: 12px;
   height: 64px;
-  width: 100%;
+  margin-top: 12px;
 }
 
-/* 再生区間（青バー） */
 .range-bar {
   position: absolute;
+  top: 23px;
   height: 4px;
   background: #1e88e5;
   border-radius: 2px;
   box-shadow: 0 0 6px #1e88e5;
-  top: 23px; /* ← つまみ中央に合わせる */
 }
 
-/* 共通スライダー */
 .slider-area input[type=range] {
   position: absolute;
+  top: 16px;
   width: 100%;
   pointer-events: none;
   background: none;
   -webkit-appearance: none;
-  top: 16px;
 }
 
-/* 棒は完全透明 */
 .slider-area input[type=range]::-webkit-slider-runnable-track {
   height: 4px;
   background: transparent;
 }
 
-/* つまみ */
 .slider-area input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
   pointer-events: auto;
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: #ffffff;
+  background: #fff;
   border: 2px solid #1e88e5;
   margin-top: -5px;
 }
 
-/* 時刻表示 */
 .time-label {
   position: absolute;
   top: 40px;
@@ -93,6 +86,7 @@ body {
 
 <hr>
 
+<h3>動画URL</h3>
 <div id="inputs">
   <input placeholder="YouTube URL 1"><br>
   <input placeholder="YouTube URL 2"><br>
@@ -102,6 +96,17 @@ body {
   <button onclick="loadVideos()">読み込み</button>
 </div>
 
+<hr>
+
+<h3>タイマー</h3>
+<input id="hour" type="number" min="0" placeholder="h"> 時間
+<input id="min" type="number" min="0" placeholder="m"> 分
+<br>
+<label>
+  <input id="stopAfter" type="checkbox">
+  指定時間後に自動停止
+</label>
+
 <script src="https://www.youtube.com/iframe_api"></script>
 
 <script>
@@ -109,149 +114,160 @@ let players = [];
 let blocks = [];
 let ranges = [];
 let current = 0;
+let timerId = null;
 const STORAGE_KEY = "yt_loop_urls";
 
-function format(t) {
-  const h = String(Math.floor(t / 3600)).padStart(2, "0");
-  const m = String(Math.floor((t % 3600) / 60)).padStart(2, "0");
-  const s = String(Math.floor(t % 60)).padStart(2, "0");
+/* 秒 → hh:mm:ss */
+function fmt(t) {
+  const h = String(Math.floor(t/3600)).padStart(2,"0");
+  const m = String(Math.floor(t%3600/60)).padStart(2,"0");
+  const s = String(Math.floor(t%60)).padStart(2,"0");
   return `${h}:${m}:${s}`;
 }
 
+/* URL → ID（youtu.be対応） */
 function extractID(url) {
   try {
     const u = new URL(url);
     if (u.hostname === "youtu.be") return u.pathname.slice(1);
     if (u.searchParams.get("v")) return u.searchParams.get("v");
-    if (u.pathname.startsWith("/shorts/")) return u.pathname.split("/")[2];
   } catch {}
   return null;
 }
 
+/* 保存 */
 function saveURLs() {
-  const urls = [...document.querySelectorAll("#inputs input")].map(i => i.value);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(urls));
+  const v = [...document.querySelectorAll("#inputs input")].map(i => i.value);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(v));
 }
 
+/* 復元 */
 function restoreURLs() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (!saved) return;
-  JSON.parse(saved).forEach((v, i) => {
+  const s = localStorage.getItem(STORAGE_KEY);
+  if (!s) return;
+  JSON.parse(s).forEach((v,i)=>{
     document.querySelectorAll("#inputs input")[i].value = v || "";
   });
 }
 
-document.addEventListener("input", e => {
-  if (e.target.closest("#inputs")) saveURLs();
+document.addEventListener("input", e=>{
+  if(e.target.closest("#inputs")) saveURLs();
 });
 
+/* 読み込み */
 function loadVideos() {
   saveURLs();
-  document.getElementById("player-area").innerHTML = "";
-  players = [];
-  blocks = [];
-  ranges = [];
-  current = 0;
+  document.getElementById("player-area").innerHTML="";
+  players=[]; blocks=[]; ranges=[];
+  current=0;
 
-  const urls = [...document.querySelectorAll("#inputs input")]
-    .map(i => i.value)
-    .filter(Boolean);
+  const urls=[...document.querySelectorAll("#inputs input")]
+    .map(i=>i.value).filter(Boolean);
 
-  urls.forEach((url, i) => {
-    const id = extractID(url);
-    if (!id) return;
+  urls.forEach((url,i)=>{
+    const id=extractID(url);
+    if(!id) return;
 
-    const block = document.createElement("div");
-    block.className = "video";
+    const block=document.createElement("div");
+    block.className="video";
 
-    const playerDiv = document.createElement("div");
+    const pdiv=document.createElement("div");
+    const area=document.createElement("div");
+    area.className="slider-area";
 
-    const area = document.createElement("div");
-    area.className = "slider-area";
+    const bar=document.createElement("div");
+    bar.className="range-bar";
 
-    const bar = document.createElement("div");
-    bar.className = "range-bar";
+    const s=document.createElement("input");
+    s.type="range";
+    const e=document.createElement("input");
+    e.type="range";
 
-    const start = document.createElement("input");
-    start.type = "range";
+    const sl=document.createElement("div");
+    sl.className="time-label";
+    const el=document.createElement("div");
+    el.className="time-label";
 
-    const end = document.createElement("input");
-    end.type = "range";
+    area.append(bar,s,e,sl,el);
+    block.append(pdiv,area);
+    player-area.appendChild(block);
 
-    const startLabel = document.createElement("div");
-    startLabel.className = "time-label";
+    blocks[i]=block;
+    ranges[i]=[0,0];
 
-    const endLabel = document.createElement("div");
-    endLabel.className = "time-label";
-
-    area.append(bar, start, end, startLabel, endLabel);
-    block.append(playerDiv, area);
-    document.getElementById("player-area").appendChild(block);
-
-    blocks[i] = block;
-    ranges[i] = [0, 0];
-
-    players[i] = new YT.Player(playerDiv, {
-      videoId: id,
-      playerVars: { playsinline: 1 },
-      events: {
-        onReady: e => {
-          const d = Math.floor(e.target.getDuration());
-          start.max = end.max = d;
-          end.value = d;
-          ranges[i] = [0, d];
-          updateUI();
-          if (i === 0) playCurrent();
+    players[i]=new YT.Player(pdiv,{
+      videoId:id,
+      playerVars:{playsinline:1},
+      events:{
+        onReady:ev=>{
+          const d=Math.floor(ev.target.getDuration());
+          s.max=e.max=d;
+          e.value=d;
+          ranges[i]=[0,d];
+          ui();
+          if(i===0) play();
         },
-        onStateChange: e => {
-          if (i === current && e.data === 1) loop();
+        onStateChange:ev=>{
+          if(ev.data===0) next();
+          if(ev.data===1) loop();
         }
       }
     });
 
-    function updateUI() {
-      const [a, b] = ranges[i];
-      const w = area.clientWidth;
-
-      bar.style.left = (a / end.max * w) + "px";
-      bar.style.width = ((b - a) / end.max * w) + "px";
-
-      startLabel.textContent = format(a);
-      endLabel.textContent = format(b);
-
-      startLabel.style.left = (a / end.max * w) + "px";
-      endLabel.style.left = (b / end.max * w) + "px";
+    function ui(){
+      const[a,b]=ranges[i];
+      const w=area.clientWidth;
+      bar.style.left=a/e.max*w+"px";
+      bar.style.width=(b-a)/e.max*w+"px";
+      sl.textContent=fmt(a);
+      el.textContent=fmt(b);
+      sl.style.left=a/e.max*w+"px";
+      el.style.left=b/e.max*w+"px";
     }
 
-    start.oninput = () => {
-      if (+start.value > +end.value) start.value = end.value;
-      ranges[i][0] = +start.value;
-      updateUI();
-    };
-
-    end.oninput = () => {
-      if (+end.value < +start.value) end.value = start.value;
-      ranges[i][1] = +end.value;
-      updateUI();
-    };
+    s.oninput=()=>{if(+s.value>+e.value)s.value=e.value;ranges[i][0]=+s.value;ui();}
+    e.oninput=()=>{if(+e.value<+s.value)e.value=s.value;ranges[i][1]=+e.value;ui();}
   });
+
+  startTimer();
 }
 
-function playCurrent() {
-  blocks.forEach((b, i) => b.style.display = i === current ? "block" : "none");
-  players[current].seekTo(ranges[current][0], true);
+function play(){
+  blocks.forEach((b,i)=>b.style.display=i===current?"block":"none");
+  players[current].seekTo(ranges[current][0],true);
   players[current].playVideo();
 }
 
-function loop() {
-  const p = players[current];
-  if (p.getCurrentTime() >= ranges[current][1]) {
-    p.seekTo(ranges[current][0], true);
+function next(){
+  current=(current+1)%players.length;
+  play();
+}
+
+function loop(){
+  const p=players[current];
+  if(p.getCurrentTime()>=ranges[current][1]){
+    p.seekTo(ranges[current][0],true);
   }
   requestAnimationFrame(loop);
 }
 
-window.addEventListener("load", restoreURLs);
+/* タイマー */
+function startTimer(){
+  if(timerId) clearTimeout(timerId);
+  const h=+hour.value||0;
+  const m=+min.value||0;
+  const t=(h*3600+m*60)*1000;
+  if(t<=0) return;
+
+  timerId=setTimeout(()=>{
+    new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg").play();
+    if(stopAfter.checked){
+      players[current]?.stopVideo();
+    }
+  },t);
+}
+
+window.addEventListener("load",restoreURLs);
 </script>
 
 </body>
