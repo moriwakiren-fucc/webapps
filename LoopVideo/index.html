@@ -31,7 +31,7 @@ body {
   border-radius: 2px;
 }
 
-/* 共通スライダー設定 */
+/* 共通スライダー */
 .slider-area input[type=range] {
   position: absolute;
   top: 16px;
@@ -45,14 +45,12 @@ body {
   pointer-events: auto;
 }
 
-/* ===== 終了スライダー専用 ===== */
+/* 終了スライダー（棒を白） */
 .end-slider::-webkit-slider-runnable-track {
   height: 4px;
   background: #ffffff;
   border-radius: 2px;
 }
-
-/* Safari対策（非表示にならないよう） */
 .end-slider {
   background: linear-gradient(#ffffff, #ffffff);
 }
@@ -92,6 +90,7 @@ let players = [];
 let blocks = [];
 let ranges = [];
 let current = 0;
+const STORAGE_KEY = "yt_loop_urls";
 
 /* 秒 → hh:mm:ss */
 function format(t) {
@@ -107,7 +106,31 @@ function extractID(url) {
   return m ? m[1] : null;
 }
 
+/* ===== URL保存 ===== */
+function saveURLs() {
+  const urls = [...document.querySelectorAll("#inputs input")]
+    .map(i => i.value);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(urls));
+}
+
+/* ===== URL復元 ===== */
+function restoreURLs() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) return;
+  const urls = JSON.parse(saved);
+  document.querySelectorAll("#inputs input").forEach((input, i) => {
+    input.value = urls[i] || "";
+  });
+}
+
+/* URL変更時に自動保存 */
+document.addEventListener("input", e => {
+  if (e.target.closest("#inputs")) saveURLs();
+});
+
 function loadVideos() {
+  saveURLs(); // 念のため保存
+
   document.getElementById("player-area").innerHTML = "";
   players = [];
   blocks = [];
@@ -138,7 +161,7 @@ function loadVideos() {
 
     const end = document.createElement("input");
     end.type = "range";
-    end.className = "end-slider"; // ← ★ここがポイント
+    end.className = "end-slider";
 
     const startLabel = document.createElement("div");
     startLabel.className = "time-label";
@@ -213,6 +236,9 @@ function loop() {
   }
   requestAnimationFrame(loop);
 }
+
+/* ページ読み込み時に復元 */
+window.addEventListener("load", restoreURLs);
 </script>
 
 </body>
