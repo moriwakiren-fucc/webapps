@@ -6,7 +6,7 @@ st.set_page_config(page_title="YouTube自動ループ再生", layout="centered")
 st.title("📺 YouTube自動ループ再生ツール")
 
 # -----------------------------
-# YouTube URL 入力
+# URL入力
 # -----------------------------
 urls = []
 st.subheader("🔗 YouTube URL（最大5本）")
@@ -23,25 +23,17 @@ auto_stop = st.checkbox("指定時間経過後に自動で再生を止める")
 
 total_seconds = h * 3600 + m * 60
 
-# Python → JS に安全に渡す
 urls_js = json.dumps(urls)
 limit_js = total_seconds * 1000
 auto_stop_js = "true" if auto_stop else "false"
 
-# -----------------------------
-# HTML + JavaScript
-# -----------------------------
 html_code = """
 <!DOCTYPE html>
 <html>
 <head>
 <style>
-.video-block {
-  margin-bottom: 24px;
-}
-.hidden {
-  display: none;
-}
+.video-block { margin-bottom: 24px; }
+.hidden { display: none; }
 </style>
 </head>
 <body>
@@ -70,7 +62,8 @@ function extractID(url) {
   return m ? m[1] : null;
 }
 
-function onYouTubeIframeAPIReady() {
+/* ★★★ ここが最重要 ★★★ */
+window.onYouTubeIframeAPIReady = function () {
   urls.forEach((url, i) => {
     const id = extractID(url);
     if (!id) return;
@@ -107,7 +100,7 @@ function onYouTubeIframeAPIReady() {
       }
     });
   });
-}
+};
 
 function onReady(event, i) {
   const d = Math.floor(event.target.getDuration());
@@ -121,9 +114,7 @@ function onReady(event, i) {
     ranges[i][1] = Number(slider.value);
   };
 
-  if (i === 0) {
-    playCurrent();
-  }
+  if (i === 0) playCurrent();
 }
 
 function playCurrent() {
@@ -170,7 +161,6 @@ function monitor() {
 </html>
 """
 
-# Python の値を安全に埋め込む
 html_code = (
     html_code
     .replace("__URLS__", urls_js)
@@ -178,4 +168,4 @@ html_code = (
     .replace("__AUTOSTOP__", auto_stop_js)
 )
 
-html(html_code, height=600)
+html(html_code, height=650)
