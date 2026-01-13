@@ -5,7 +5,6 @@
 <title>YouTube 自動ループ再生</title>
 
 <style>
-/* ===== 全体レイアウト ===== */
 html, body {
   margin: 0;
   padding: 0;
@@ -15,22 +14,21 @@ html, body {
 
 body {
   font-family: sans-serif;
-  box-sizing: border-box;
   padding: 16px;
+  box-sizing: border-box;
 }
 
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
-/* ===== 動画ブロック ===== */
 .video {
   display: none;
   margin-bottom: 24px;
   max-width: 100%;
 }
 
-/* ===== スライダーエリア ===== */
+/* ===== スライダー ===== */
 .slider-area {
   position: relative;
   margin-top: 12px;
@@ -38,34 +36,33 @@ body {
   width: 100%;
 }
 
-/* 再生区間バー（ここだけ青） */
+/* 再生区間（青バー） */
 .range-bar {
   position: absolute;
-  top: 28px;
   height: 4px;
   background: #1e88e5;
   border-radius: 2px;
   box-shadow: 0 0 6px #1e88e5;
+  top: 23px; /* ← つまみ中央に合わせる */
 }
 
-/* 共通スライダー設定 */
+/* 共通スライダー */
 .slider-area input[type=range] {
   position: absolute;
-  top: 16px;
   width: 100%;
   pointer-events: none;
   background: none;
   -webkit-appearance: none;
+  top: 16px;
 }
 
-/* 棒（開始・終了とも白） */
+/* 棒は完全透明 */
 .slider-area input[type=range]::-webkit-slider-runnable-track {
   height: 4px;
-  background: #ffffff;
-  border-radius: 2px;
+  background: transparent;
 }
 
-/* ⚪️（つまみ） */
+/* つまみ */
 .slider-area input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
   pointer-events: auto;
@@ -114,7 +111,6 @@ let ranges = [];
 let current = 0;
 const STORAGE_KEY = "yt_loop_urls";
 
-/* 秒 → hh:mm:ss */
 function format(t) {
   const h = String(Math.floor(t / 3600)).padStart(2, "0");
   const m = String(Math.floor((t % 3600) / 60)).padStart(2, "0");
@@ -122,7 +118,6 @@ function format(t) {
   return `${h}:${m}:${s}`;
 }
 
-/* URL → 動画ID */
 function extractID(url) {
   try {
     const u = new URL(url);
@@ -133,13 +128,11 @@ function extractID(url) {
   return null;
 }
 
-/* URL保存 */
 function saveURLs() {
   const urls = [...document.querySelectorAll("#inputs input")].map(i => i.value);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(urls));
 }
 
-/* URL復元 */
 function restoreURLs() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (!saved) return;
