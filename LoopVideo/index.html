@@ -10,7 +10,6 @@ body {
   margin: 16px;
 }
 
-/* ===== プレイヤー ===== */
 .video {
   display: none;
   margin-bottom: 24px;
@@ -32,7 +31,7 @@ body {
   border-radius: 2px;
 }
 
-/* スライダー（透明） */
+/* 共通スライダー設定 */
 .slider-area input[type=range] {
   position: absolute;
   top: 16px;
@@ -44,6 +43,18 @@ body {
 /* ⚪️ */
 .slider-area input[type=range]::-webkit-slider-thumb {
   pointer-events: auto;
+}
+
+/* ===== 終了スライダー専用 ===== */
+.end-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  background: #ffffff;
+  border-radius: 2px;
+}
+
+/* Safari対策（非表示にならないよう） */
+.end-slider {
+  background: linear-gradient(#ffffff, #ffffff);
 }
 
 /* 時刻表示 */
@@ -127,6 +138,7 @@ function loadVideos() {
 
     const end = document.createElement("input");
     end.type = "range";
+    end.className = "end-slider"; // ← ★ここがポイント
 
     const startLabel = document.createElement("div");
     startLabel.className = "time-label";
