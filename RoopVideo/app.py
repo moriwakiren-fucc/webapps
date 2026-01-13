@@ -5,23 +5,10 @@ st.set_page_config(page_title="YouTube自動ループ再生", layout="centered")
 st.title("📺 YouTube自動ループ再生ツール")
 
 urls = []
-ranges = []
-
-st.subheader("🔗 YouTube URL と再生区間")
+st.subheader("🔗 YouTube URL（最大5本）")
 
 for i in range(5):
-    url = st.text_input(f"YouTube URL {i+1}", "")
-    urls.append(url)
-
-    start, end = st.slider(
-        f"再生区間 {i+1}（秒）",
-        min_value=0,
-        max_value=1,   # ← JS側で上書きされる
-        value=(0, 1),
-        step=1,
-        key=f"slider_{i}"
-    )
-    ranges.append((start, end))
+    urls.append(st.text_input(f"YouTube URL {i+1}", ""))
 
 st.subheader("⏱ 時間指定")
 h = st.number_input("時間（h）", min_value=0, max_value=24, value=0)
@@ -33,9 +20,19 @@ total_seconds = h * 3600 + m * 60
 html_code = f"""
 <!DOCTYPE html>
 <html>
+<head>
+<style>
+.video-block {{
+  margin-bottom: 24px;
+}}
+.hidden {{
+  display: none;
+}}
+</style>
+</head>
 <body>
 
-<div id="players"></div>
+<div id="container"></div>
 
 <audio id="chime">
   <source src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg">
@@ -45,10 +42,12 @@ html_code = f"""
 
 <script>
 const urls = {urls};
-const ranges = {ranges};
 let players = [];
+let blocks = [];
+let ranges = [];
 let index = 0;
-let startTime = Date.now();
+
+const startTime = Date.now();
 const limit = {total_seconds * 1000};
 const autoStop = {str(auto_stop).lower()};
 
@@ -62,12 +61,27 @@ function onYouTubeIframeAPIReady() {{
     const id = extractID(url);
     if (!id) return;
 
-    const wrapper = document.createElement("div");
-    wrapper.id = "wrap_" + i;
-    wrapper.style.display = "none";   // ← 非再生中は見えない
-    document.getElementById("players").appendChild(wrapper);
+    const block = document.createElement("div");
+    block.className = "video-block hidden";
+    block.id = "block_" + i;
 
-    players[i] = new YT.Player(wrapper, {{
+    const playerDiv = document.createElement("div");
+    playerDiv.id = "player_" + i;
+
+    const slider = document.createElement("input");
+    slider.type = "range";
+    slider.min = 0;
+    slider.step = 1;
+    slider.value = 0;
+
+    block.appendChild(playerDiv);
+    block.appendChild(slider);
+    document.getElementById("container").appendChild(block);
+
+    blocks[i] = block;
+    ranges[i] = [0, 0];
+
+    players[i] = new YT.Player(playerDiv, {{
       videoId: id,
       playerVars: {{
         autoplay: 0,
@@ -80,21 +94,28 @@ function onYouTubeIframeAPIReady() {{
       }}
     }});
   }});
-
-  playCurrent();
-}}
+}
 
 function onReady(event, i) {{
   const d = event.target.getDuration();
-  if (ranges[i][1] <= 1) {{
-    ranges[i][1] = d;
+  const slider = blocks[i].querySelector("input");
+
+  slider.max = Math.floor(d);
+  slider.value = d;
+  ranges[i] = [0, d];
+
+  slider.oninput = () => {{
+    ranges[i][1] = Number(slider.value);
+  }};
+
+  if (i === 0) {{
+    playCurrent();
   }}
 }}
 
 function playCurrent() {{
-  players.forEach((p, i) => {{
-    document.getElementById("wrap_" + i).style.display =
-      i === index ? "block" : "none";
+  blocks.forEach((b, i) => {{
+    b.classList.toggle("hidden", i !== index);
   }});
 
   const p = players[index];
@@ -136,4 +157,4 @@ function monitor() {{
 </html>
 """
 
-html(html_code, height=450)
+html(html_code, height=600)
