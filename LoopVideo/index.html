@@ -100,10 +100,33 @@ function format(t) {
   return `${h}:${m}:${s}`;
 }
 
-/* URL → 動画ID */
+/* ===== URL → 動画ID（完全対応版） ===== */
 function extractID(url) {
-  const m = url.match(/(?:v=|youtu\.be\/)([^&]+)/);
-  return m ? m[1] : null;
+  if (!url) return null;
+
+  try {
+    const u = new URL(url);
+
+    /* youtu.be/VIDEO_ID */
+    if (u.hostname === "youtu.be") {
+      return u.pathname.slice(1);
+    }
+
+    /* youtube.com/watch?v=VIDEO_ID */
+    if (u.searchParams.get("v")) {
+      return u.searchParams.get("v");
+    }
+
+    /* youtube.com/shorts/VIDEO_ID */
+    if (u.pathname.startsWith("/shorts/")) {
+      return u.pathname.split("/")[2];
+    }
+
+  } catch {
+    return null;
+  }
+
+  return null;
 }
 
 /* ===== URL保存 ===== */
@@ -129,7 +152,7 @@ document.addEventListener("input", e => {
 });
 
 function loadVideos() {
-  saveURLs(); // 念のため保存
+  saveURLs();
 
   document.getElementById("player-area").innerHTML = "";
   players = [];
@@ -237,7 +260,7 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-/* ページ読み込み時に復元 */
+/* ページ読み込み時にURL復元 */
 window.addEventListener("load", restoreURLs);
 </script>
 
