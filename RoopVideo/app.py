@@ -32,8 +32,21 @@ html_code = """
 <html>
 <head>
 <style>
-.video-block { margin-bottom: 24px; }
+.video-block { margin-bottom: 28px; }
 .hidden { display: none; }
+
+.range-wrap {
+  position: relative;
+  height: 32px;
+}
+.range-wrap input[type=range] {
+  position: absolute;
+  width: 100%;
+  pointer-events: none;
+}
+.range-wrap input::-webkit-slider-thumb {
+  pointer-events: auto;
+}
 </style>
 </head>
 <body>
@@ -62,7 +75,6 @@ function extractID(url) {
   return m ? m[1] : null;
 }
 
-/* ★★★ ここが最重要 ★★★ */
 window.onYouTubeIframeAPIReady = function () {
   urls.forEach((url, i) => {
     const id = extractID(url);
@@ -70,18 +82,25 @@ window.onYouTubeIframeAPIReady = function () {
 
     const block = document.createElement("div");
     block.className = "video-block hidden";
-    block.id = "block_" + i;
 
     const playerDiv = document.createElement("div");
-    playerDiv.id = "player_" + i;
 
-    const slider = document.createElement("input");
-    slider.type = "range";
-    slider.min = 0;
-    slider.step = 1;
+    const wrap = document.createElement("div");
+    wrap.className = "range-wrap";
+
+    const start = document.createElement("input");
+    start.type = "range";
+    start.step = 1;
+
+    const end = document.createElement("input");
+    end.type = "range";
+    end.step = 1;
+
+    wrap.appendChild(start);
+    wrap.appendChild(end);
 
     block.appendChild(playerDiv);
-    block.appendChild(slider);
+    block.appendChild(wrap);
     document.getElementById("container").appendChild(block);
 
     blocks[i] = block;
@@ -89,39 +108,39 @@ window.onYouTubeIframeAPIReady = function () {
 
     players[i] = new YT.Player(playerDiv, {
       videoId: id,
-      playerVars: {
-        autoplay: 0,
-        controls: 1,
-        playsinline: 1
-      },
+      playerVars: { controls: 1, playsinline: 1 },
       events: {
         onReady: e => onReady(e, i),
         onStateChange: e => onStateChange(e, i)
       }
     });
+
+    start.oninput = () => {
+      if (start.value > end.value) start.value = end.value;
+      ranges[i][0] = Number(start.value);
+    };
+
+    end.oninput = () => {
+      if (end.value < start.value) end.value = start.value;
+      ranges[i][1] = Number(end.value);
+    };
   });
 };
 
 function onReady(event, i) {
   const d = Math.floor(event.target.getDuration());
-  const slider = blocks[i].querySelector("input");
+  const inputs = blocks[i].querySelectorAll("input");
 
-  slider.max = d;
-  slider.value = d;
+  inputs.forEach(input => input.max = d);
+  inputs[1].value = d;
+
   ranges[i] = [0, d];
-
-  slider.oninput = () => {
-    ranges[i][1] = Number(slider.value);
-  };
 
   if (i === 0) playCurrent();
 }
 
 function playCurrent() {
-  blocks.forEach((b, i) => {
-    b.classList.toggle("hidden", i !== index);
-  });
-
+  blocks.forEach((b, i) => b.classList.toggle("hidden", i !== index));
   const p = players[index];
   p.seekTo(ranges[index][0], true);
   p.playVideo();
@@ -129,9 +148,7 @@ function playCurrent() {
 }
 
 function onStateChange(event, i) {
-  if (i === index && event.data === YT.PlayerState.PLAYING) {
-    monitor();
-  }
+  if (i === index && event.data === YT.PlayerState.PLAYING) monitor();
 }
 
 function monitor() {
@@ -139,18 +156,12 @@ function monitor() {
 
   if (limit > 0 && now - startTime >= limit) {
     document.getElementById("chime").play();
-    if (autoStop) {
-      players[index].pauseVideo();
-      return;
-    }
+    if (autoStop) return players[index].pauseVideo();
   }
 
   const p = players[index];
   if (p.getCurrentTime() >= ranges[index][1]) {
-    p.pauseVideo();
-    index = (index + 1) % players.length;
-    playCurrent();
-    return;
+    p.seekTo(ranges[index][0], true);
   }
 
   requestAnimationFrame(monitor);
@@ -168,4 +179,4 @@ html_code = (
     .replace("__AUTOSTOP__", auto_stop_js)
 )
 
-html(html_code, height=650)
+html(html_code, height=680)
