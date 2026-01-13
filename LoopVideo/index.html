@@ -5,54 +5,76 @@
 <title>YouTube 自動ループ再生</title>
 
 <style>
-body {
-  font-family: sans-serif;
-  margin: 16px;
+/* ===== 全体レイアウト ===== */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
 }
 
+body {
+  font-family: sans-serif;
+  box-sizing: border-box;
+  padding: 16px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* ===== 動画ブロック ===== */
 .video {
   display: none;
   margin-bottom: 24px;
+  max-width: 100%;
 }
 
-/* ===== スライダー全体 ===== */
+/* ===== スライダーエリア ===== */
 .slider-area {
   position: relative;
   margin-top: 12px;
   height: 64px;
+  width: 100%;
 }
 
-/* 青い再生区間バー */
+/* 再生区間バー（ここだけ青） */
 .range-bar {
   position: absolute;
   top: 28px;
   height: 4px;
   background: #1e88e5;
   border-radius: 2px;
+  box-shadow: 0 0 6px #1e88e5;
 }
 
-/* 共通スライダー */
+/* 共通スライダー設定 */
 .slider-area input[type=range] {
   position: absolute;
   top: 16px;
   width: 100%;
   pointer-events: none;
   background: none;
+  -webkit-appearance: none;
 }
 
-/* ⚪️ */
-.slider-area input[type=range]::-webkit-slider-thumb {
-  pointer-events: auto;
-}
-
-/* 終了スライダー（棒を白） */
-.end-slider::-webkit-slider-runnable-track {
+/* 棒（開始・終了とも白） */
+.slider-area input[type=range]::-webkit-slider-runnable-track {
   height: 4px;
   background: #ffffff;
   border-radius: 2px;
 }
-.end-slider {
-  background: linear-gradient(#ffffff, #ffffff);
+
+/* ⚪️（つまみ） */
+.slider-area input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  pointer-events: auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #1e88e5;
+  margin-top: -5px;
 }
 
 /* 時刻表示 */
@@ -100,60 +122,38 @@ function format(t) {
   return `${h}:${m}:${s}`;
 }
 
-/* ===== URL → 動画ID（完全対応版） ===== */
+/* URL → 動画ID */
 function extractID(url) {
-  if (!url) return null;
-
   try {
     const u = new URL(url);
-
-    /* youtu.be/VIDEO_ID */
-    if (u.hostname === "youtu.be") {
-      return u.pathname.slice(1);
-    }
-
-    /* youtube.com/watch?v=VIDEO_ID */
-    if (u.searchParams.get("v")) {
-      return u.searchParams.get("v");
-    }
-
-    /* youtube.com/shorts/VIDEO_ID */
-    if (u.pathname.startsWith("/shorts/")) {
-      return u.pathname.split("/")[2];
-    }
-
-  } catch {
-    return null;
-  }
-
+    if (u.hostname === "youtu.be") return u.pathname.slice(1);
+    if (u.searchParams.get("v")) return u.searchParams.get("v");
+    if (u.pathname.startsWith("/shorts/")) return u.pathname.split("/")[2];
+  } catch {}
   return null;
 }
 
-/* ===== URL保存 ===== */
+/* URL保存 */
 function saveURLs() {
-  const urls = [...document.querySelectorAll("#inputs input")]
-    .map(i => i.value);
+  const urls = [...document.querySelectorAll("#inputs input")].map(i => i.value);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(urls));
 }
 
-/* ===== URL復元 ===== */
+/* URL復元 */
 function restoreURLs() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (!saved) return;
-  const urls = JSON.parse(saved);
-  document.querySelectorAll("#inputs input").forEach((input, i) => {
-    input.value = urls[i] || "";
+  JSON.parse(saved).forEach((v, i) => {
+    document.querySelectorAll("#inputs input")[i].value = v || "";
   });
 }
 
-/* URL変更時に自動保存 */
 document.addEventListener("input", e => {
   if (e.target.closest("#inputs")) saveURLs();
 });
 
 function loadVideos() {
   saveURLs();
-
   document.getElementById("player-area").innerHTML = "";
   players = [];
   blocks = [];
@@ -162,7 +162,7 @@ function loadVideos() {
 
   const urls = [...document.querySelectorAll("#inputs input")]
     .map(i => i.value)
-    .filter(v => v);
+    .filter(Boolean);
 
   urls.forEach((url, i) => {
     const id = extractID(url);
@@ -184,7 +184,6 @@ function loadVideos() {
 
     const end = document.createElement("input");
     end.type = "range";
-    end.className = "end-slider";
 
     const startLabel = document.createElement("div");
     startLabel.className = "time-label";
@@ -218,8 +217,7 @@ function loadVideos() {
     });
 
     function updateUI() {
-      const a = ranges[i][0];
-      const b = ranges[i][1];
+      const [a, b] = ranges[i];
       const w = area.clientWidth;
 
       bar.style.left = (a / end.max * w) + "px";
@@ -260,7 +258,6 @@ function loop() {
   requestAnimationFrame(loop);
 }
 
-/* ページ読み込み時にURL復元 */
 window.addEventListener("load", restoreURLs);
 </script>
 
