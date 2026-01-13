@@ -6,21 +6,10 @@ st.set_page_config(page_title="YouTube自動ループ再生", layout="centered")
 st.title("📺 YouTube自動ループ再生ツール")
 
 urls = []
-ranges = []
 
-st.subheader("🔗 YouTube URL と再生区間")
-
+st.subheader("🔗 YouTube URL（最大5本）")
 for i in range(5):
-    url = st.text_input(f"YouTube URL {i+1}", "")
-    start, end = st.slider(
-        f"再生区間 {i+1}（秒）",
-        min_value=0,
-        max_value=3600,
-        value=(0, 60),
-        step=1
-    )
-    urls.append(url)
-    ranges.append((start, end))
+    urls.append(st.text_input(f"YouTube URL {i+1}", ""))
 
 st.subheader("⏱ 時間指定")
 h = st.number_input("時間（h）", min_value=0, max_value=24, value=0)
@@ -33,7 +22,8 @@ html_code = f"""
 <!DOCTYPE html>
 <html>
 <body>
-<div id="player"></div>
+
+<div id="player" style="width:100%;"></div>
 
 <audio id="chime">
   <source src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg">
@@ -42,13 +32,15 @@ html_code = f"""
 <script src="https://www.youtube.com/iframe_api"></script>
 
 <script>
-let urls = {urls};
-let ranges = {ranges};
+const urls = {urls};
 let index = 0;
 let player;
+let duration = 0;
+let start = 0;
+let end = 0;
 let startTime = Date.now();
-let limit = {total_seconds * 1000};
-let autoStop = {str(auto_stop).lower()};
+const limit = {total_seconds * 1000};
+const autoStop = {str(auto_stop).lower()};
 
 function extractID(url) {{
   const m = url.match(/(?:v=|youtu\\.be\\/)([^&]+)/);
@@ -56,14 +48,14 @@ function extractID(url) {{
 }}
 
 function onYouTubeIframeAPIReady() {{
-  playVideo();
+  loadVideo();
 }}
 
-function playVideo() {{
+function loadVideo() {{
   const id = extractID(urls[index]);
   if (!id) {{
     index = (index + 1) % urls.length;
-    playVideo();
+    loadVideo();
     return;
   }}
 
@@ -75,24 +67,27 @@ function playVideo() {{
       playsinline: 1
     }},
     events: {{
-      onReady: onPlayerReady,
+      onReady: onReady,
       onStateChange: onStateChange
     }}
   }});
 }}
 
-function onPlayerReady(event) {{
-  event.target.seekTo(ranges[index][0], true);
-  event.target.playVideo();
+function onReady(event) {{
+  duration = player.getDuration();
+  start = 0;
+  end = duration;
+  player.seekTo(start, true);
+  player.playVideo();
 }}
 
 function onStateChange(event) {{
   if (event.data === YT.PlayerState.PLAYING) {{
-    checkTime();
+    monitor();
   }}
 }}
 
-function checkTime() {{
+function monitor() {{
   const now = Date.now();
 
   if (limit > 0 && now - startTime >= limit) {{
@@ -103,19 +98,19 @@ function checkTime() {{
     }}
   }}
 
-  const current = player.getCurrentTime();
-  if (current >= ranges[index][1]) {{
+  if (player.getCurrentTime() >= end) {{
     index = (index + 1) % urls.length;
     player.destroy();
-    playVideo();
+    loadVideo();
     return;
   }}
 
-  requestAnimationFrame(checkTime);
+  requestAnimationFrame(monitor);
 }}
 </script>
+
 </body>
 </html>
 """
 
-html(html_code, height=400)
+html(html_code, height=420)
