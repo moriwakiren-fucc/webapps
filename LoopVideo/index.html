@@ -10,26 +10,50 @@ body {
   margin: 16px;
 }
 
+/* ===== プレイヤー ===== */
 .video {
   display: none;
   margin-bottom: 24px;
 }
 
-.range-wrap {
+/* ===== スライダー全体 ===== */
+.slider-area {
   position: relative;
-  height: 32px;
+  margin-top: 12px;
+  height: 64px;
 }
 
-.range-wrap input[type=range] {
+/* 青い再生区間バー */
+.range-bar {
   position: absolute;
+  top: 28px;
+  height: 4px;
+  background: #1e88e5;
+  border-radius: 2px;
+}
+
+/* スライダー（透明） */
+.slider-area input[type=range] {
+  position: absolute;
+  top: 16px;
   width: 100%;
   pointer-events: none;
+  background: none;
 }
 
-.range-wrap input::-webkit-slider-thumb {
+/* ⚪️ */
+.slider-area input[type=range]::-webkit-slider-thumb {
   pointer-events: auto;
 }
 
+/* 時刻表示 */
+.time-label {
+  position: absolute;
+  top: 40px;
+  font-size: 12px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
 </style>
 </head>
 
@@ -37,12 +61,10 @@ body {
 
 <h2>YouTube自動ループ再生</h2>
 
-<!-- プレイヤー表示エリア -->
 <div id="player-area"></div>
 
 <hr>
 
-<!-- URL入力 -->
 <div id="inputs">
   <input placeholder="YouTube URL 1"><br>
   <input placeholder="YouTube URL 2"><br>
@@ -60,6 +82,15 @@ let blocks = [];
 let ranges = [];
 let current = 0;
 
+/* 秒 → hh:mm:ss */
+function format(t) {
+  const h = String(Math.floor(t / 3600)).padStart(2, "0");
+  const m = String(Math.floor((t % 3600) / 60)).padStart(2, "0");
+  const s = String(Math.floor(t % 60)).padStart(2, "0");
+  return `${h}:${m}:${s}`;
+}
+
+/* URL → 動画ID */
 function extractID(url) {
   const m = url.match(/(?:v=|youtu\.be\/)([^&]+)/);
   return m ? m[1] : null;
@@ -85,8 +116,11 @@ function loadVideos() {
 
     const playerDiv = document.createElement("div");
 
-    const wrap = document.createElement("div");
-    wrap.className = "range-wrap";
+    const area = document.createElement("div");
+    area.className = "slider-area";
+
+    const bar = document.createElement("div");
+    bar.className = "range-bar";
 
     const start = document.createElement("input");
     start.type = "range";
@@ -94,8 +128,14 @@ function loadVideos() {
     const end = document.createElement("input");
     end.type = "range";
 
-    wrap.append(start, end);
-    block.append(playerDiv, wrap);
+    const startLabel = document.createElement("div");
+    startLabel.className = "time-label";
+
+    const endLabel = document.createElement("div");
+    endLabel.className = "time-label";
+
+    area.append(bar, start, end, startLabel, endLabel);
+    block.append(playerDiv, area);
     document.getElementById("player-area").appendChild(block);
 
     blocks[i] = block;
@@ -110,6 +150,7 @@ function loadVideos() {
           start.max = end.max = d;
           end.value = d;
           ranges[i] = [0, d];
+          updateUI();
           if (i === 0) playCurrent();
         },
         onStateChange: e => {
@@ -118,14 +159,31 @@ function loadVideos() {
       }
     });
 
+    function updateUI() {
+      const a = ranges[i][0];
+      const b = ranges[i][1];
+      const w = area.clientWidth;
+
+      bar.style.left = (a / end.max * w) + "px";
+      bar.style.width = ((b - a) / end.max * w) + "px";
+
+      startLabel.textContent = format(a);
+      endLabel.textContent = format(b);
+
+      startLabel.style.left = (a / end.max * w) + "px";
+      endLabel.style.left = (b / end.max * w) + "px";
+    }
+
     start.oninput = () => {
       if (+start.value > +end.value) start.value = end.value;
       ranges[i][0] = +start.value;
+      updateUI();
     };
 
     end.oninput = () => {
       if (+end.value < +start.value) end.value = start.value;
       ranges[i][1] = +end.value;
+      updateUI();
     };
   });
 }
