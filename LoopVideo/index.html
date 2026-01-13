@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>YouTube 自動ループ再生</title>
+
+<style>
+body {
+  font-family: sans-serif;
+  margin: 16px;
+}
+
+.video {
+  display: none;
+  margin-bottom: 24px;
+}
+
+.range-wrap {
+  position: relative;
+  height: 32px;
+}
+
+.range-wrap input[type=range] {
+  position: absolute;
+  width: 100%;
+  pointer-events: none;
+}
+
+.range-wrap input::-webkit-slider-thumb {
+  pointer-events: auto;
+}
+
+</style>
+</head>
+
+<body>
+
+<h2>YouTube自動ループ再生</h2>
+
+<!-- プレイヤー表示エリア -->
+<div id="player-area"></div>
+
+<hr>
+
+<!-- URL入力 -->
+<div id="inputs">
+  <input placeholder="YouTube URL 1"><br>
+  <input placeholder="YouTube URL 2"><br>
+  <input placeholder="YouTube URL 3"><br>
+  <input placeholder="YouTube URL 4"><br>
+  <input placeholder="YouTube URL 5"><br>
+  <button onclick="loadVideos()">読み込み</button>
+</div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<script>
+let players = [];
+let blocks = [];
+let ranges = [];
+let current = 0;
+
+function extractID(url) {
+  const m = url.match(/(?:v=|youtu\.be\/)([^&]+)/);
+  return m ? m[1] : null;
+}
+
+function loadVideos() {
+  document.getElementById("player-area").innerHTML = "";
+  players = [];
+  blocks = [];
+  ranges = [];
+  current = 0;
+
+  const urls = [...document.querySelectorAll("#inputs input")]
+    .map(i => i.value)
+    .filter(v => v);
+
+  urls.forEach((url, i) => {
+    const id = extractID(url);
+    if (!id) return;
+
+    const block = document.createElement("div");
+    block.className = "video";
+
+    const playerDiv = document.createElement("div");
+
+    const wrap = document.createElement("div");
+    wrap.className = "range-wrap";
+
+    const start = document.createElement("input");
+    start.type = "range";
+
+    const end = document.createElement("input");
+    end.type = "range";
+
+    wrap.append(start, end);
+    block.append(playerDiv, wrap);
+    document.getElementById("player-area").appendChild(block);
+
+    blocks[i] = block;
+    ranges[i] = [0, 0];
+
+    players[i] = new YT.Player(playerDiv, {
+      videoId: id,
+      playerVars: { playsinline: 1 },
+      events: {
+        onReady: e => {
+          const d = Math.floor(e.target.getDuration());
+          start.max = end.max = d;
+          end.value = d;
+          ranges[i] = [0, d];
+          if (i === 0) playCurrent();
+        },
+        onStateChange: e => {
+          if (i === current && e.data === 1) loop();
+        }
+      }
+    });
+
+    start.oninput = () => {
+      if (+start.value > +end.value) start.value = end.value;
+      ranges[i][0] = +start.value;
+    };
+
+    end.oninput = () => {
+      if (+end.value < +start.value) end.value = start.value;
+      ranges[i][1] = +end.value;
+    };
+  });
+}
+
+function playCurrent() {
+  blocks.forEach((b, i) => b.style.display = i === current ? "block" : "none");
+  players[current].seekTo(ranges[current][0], true);
+  players[current].playVideo();
+}
+
+function loop() {
+  const p = players[current];
+  if (p.getCurrentTime() >= ranges[current][1]) {
+    p.seekTo(ranges[current][0], true);
+  }
+  requestAnimationFrame(loop);
+}
+</script>
+
+</body>
+</html>
