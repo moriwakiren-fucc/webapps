@@ -2,14 +2,26 @@ import streamlit as st
 from streamlit.components.v1 import html
 
 st.set_page_config(page_title="YouTube自動ループ再生", layout="centered")
-
 st.title("📺 YouTube自動ループ再生ツール")
 
 urls = []
+ranges = []
 
-st.subheader("🔗 YouTube URL（最大5本）")
+st.subheader("🔗 YouTube URL と再生区間")
+
 for i in range(5):
-    urls.append(st.text_input(f"YouTube URL {i+1}", ""))
+    url = st.text_input(f"YouTube URL {i+1}", "")
+    urls.append(url)
+
+    start, end = st.slider(
+        f"再生区間 {i+1}（秒）",
+        min_value=0,
+        max_value=1,   # ← JS側で上書きされる
+        value=(0, 1),
+        step=1,
+        key=f"slider_{i}"
+    )
+    ranges.append((start, end))
 
 st.subheader("⏱ 時間指定")
 h = st.number_input("時間（h）", min_value=0, max_value=24, value=0)
@@ -23,7 +35,7 @@ html_code = f"""
 <html>
 <body>
 
-<div id="player" style="width:100%;"></div>
+<div id="players"></div>
 
 <audio id="chime">
   <source src="https://actions.google.com/sounds/v1/alarms/digital_watch_alarm_long.ogg">
@@ -33,11 +45,9 @@ html_code = f"""
 
 <script>
 const urls = {urls};
+const ranges = {ranges};
+let players = [];
 let index = 0;
-let player;
-let duration = 0;
-let start = 0;
-let end = 0;
 let startTime = Date.now();
 const limit = {total_seconds * 1000};
 const autoStop = {str(auto_stop).lower()};
@@ -48,41 +58,53 @@ function extractID(url) {{
 }}
 
 function onYouTubeIframeAPIReady() {{
-  loadVideo();
-}}
+  urls.forEach((url, i) => {{
+    const id = extractID(url);
+    if (!id) return;
 
-function loadVideo() {{
-  const id = extractID(urls[index]);
-  if (!id) {{
-    index = (index + 1) % urls.length;
-    loadVideo();
-    return;
-  }}
+    const wrapper = document.createElement("div");
+    wrapper.id = "wrap_" + i;
+    wrapper.style.display = "none";   // ← 非再生中は見えない
+    document.getElementById("players").appendChild(wrapper);
 
-  player = new YT.Player('player', {{
-    videoId: id,
-    playerVars: {{
-      autoplay: 1,
-      controls: 1,
-      playsinline: 1
-    }},
-    events: {{
-      onReady: onReady,
-      onStateChange: onStateChange
-    }}
+    players[i] = new YT.Player(wrapper, {{
+      videoId: id,
+      playerVars: {{
+        autoplay: 0,
+        controls: 1,
+        playsinline: 1
+      }},
+      events: {{
+        onReady: e => onReady(e, i),
+        onStateChange: e => onStateChange(e, i)
+      }}
+    }});
   }});
+
+  playCurrent();
 }}
 
-function onReady(event) {{
-  duration = player.getDuration();
-  start = 0;
-  end = duration;
-  player.seekTo(start, true);
-  player.playVideo();
+function onReady(event, i) {{
+  const d = event.target.getDuration();
+  if (ranges[i][1] <= 1) {{
+    ranges[i][1] = d;
+  }}
 }}
 
-function onStateChange(event) {{
-  if (event.data === YT.PlayerState.PLAYING) {{
+function playCurrent() {{
+  players.forEach((p, i) => {{
+    document.getElementById("wrap_" + i).style.display =
+      i === index ? "block" : "none";
+  }});
+
+  const p = players[index];
+  p.seekTo(ranges[index][0], true);
+  p.playVideo();
+  monitor();
+}}
+
+function onStateChange(event, i) {{
+  if (i === index && event.data === YT.PlayerState.PLAYING) {{
     monitor();
   }}
 }}
@@ -93,15 +115,16 @@ function monitor() {{
   if (limit > 0 && now - startTime >= limit) {{
     document.getElementById("chime").play();
     if (autoStop) {{
-      player.pauseVideo();
+      players[index].pauseVideo();
       return;
     }}
   }}
 
-  if (player.getCurrentTime() >= end) {{
-    index = (index + 1) % urls.length;
-    player.destroy();
-    loadVideo();
+  const p = players[index];
+  if (p.getCurrentTime() >= ranges[index][1]) {{
+    p.pauseVideo();
+    index = (index + 1) % players.length;
+    playCurrent();
     return;
   }}
 
@@ -113,4 +136,4 @@ function monitor() {{
 </html>
 """
 
-html(html_code, height=420)
+html(html_code, height=450)
