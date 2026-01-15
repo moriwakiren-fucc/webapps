@@ -1,12 +1,11 @@
 import streamlit as st
-import time
 import re
 
 # -----------------------------
 # 初期設定
 # -----------------------------
 st.set_page_config(
-    page_title="YouTube 学習ループツール",
+    page_title="YouTube 学習用 区間ループツール",
     layout="wide"
 )
 
@@ -14,15 +13,15 @@ st.set_page_config(
 # 補助関数
 # -----------------------------
 def extract_video_id(url):
-    match = re.search(r"(?:v=|youtu.be/)([A-Za-z0-9_-]{11})", url)
-    return match.group(1) if match else None
+    m = re.search(r"(?:v=|youtu.be/)([A-Za-z0-9_-]{11})", url)
+    return m.group(1) if m else None
 
 
-def format_time(sec, has_hour):
+def sec_to_label(sec):
     h = sec // 3600
     m = (sec % 3600) // 60
     s = sec % 60
-    if has_hour:
+    if h > 0:
         return f"{h}:{m:02}:{s:02}"
     else:
         return f"{m}:{s:02}"
@@ -40,8 +39,8 @@ if "videos" not in st.session_state:
 if "playing" not in st.session_state:
     st.session_state.playing = False
 
-if "video_index" not in st.session_state:
-    st.session_state.video_index = 0
+if "index" not in st.session_state:
+    st.session_state.index = 0
 
 # -----------------------------
 # タイトル
@@ -61,14 +60,11 @@ for i, v in enumerate(st.session_state.videos):
             key=f"url_{i}"
         )
 
-        has_hour = v["end"] >= 3600
-
         start, end = st.slider(
-            "再生区間",
+            "再生区間（秒）",
             0,
             7200,
             (v["start"], v["end"]),
-            format="%d",
             key=f"slider_{i}"
         )
 
@@ -76,8 +72,7 @@ for i, v in enumerate(st.session_state.videos):
         v["end"] = end
 
         st.caption(
-            f"区間：{format_time(start, has_hour)} "
-            f"〜 {format_time(end, has_hour)}"
+            f"区間：{sec_to_label(start)} 〜 {sec_to_label(end)}"
         )
 
 # -----------------------------
@@ -86,41 +81,57 @@ for i, v in enumerate(st.session_state.videos):
 st.subheader("② 再生設定")
 
 loop_section = st.checkbox("区間ループ", value=True)
-loop_multi = st.checkbox("複数動画を順番にループ", value=True)
+loop_multi = st.checkbox("複数動画を順番に再生", value=True)
 
 # -----------------------------
 # 再生制御
 # -----------------------------
-st.subheader("③ 再生制御")
-
 col1, col2 = st.columns(2)
+
 with col1:
     if st.button("▶ 再生", use_container_width=True):
         st.session_state.playing = True
-        st.session_state.video_index = 0
+        st.session_state.index = 0
 
 with col2:
     if st.button("⏹ 停止", use_container_width=True):
         st.session_state.playing = False
 
 # -----------------------------
-# 再生処理
+# 有効動画抽出
 # -----------------------------
-valid_videos = []
+valid = []
 for v in st.session_state.videos:
     vid = extract_video_id(v["url"])
     if vid and v["end"] > v["start"]:
-        valid_videos.append(
+        valid.append(
             {"id": vid, "start": v["start"], "end": v["end"]}
         )
 
-if st.session_state.playing and valid_videos:
-    v = valid_videos[st.session_state.video_index]
+# -----------------------------
+# 再生表示
+# -----------------------------
+if st.session_state.playing and valid:
 
-    iframe_url = (
-        f"https://www.youtube.com/embed/{v['id']}"
-        f"?start={v['start']}&end={v['end']}&autoplay=1&mute=1"
+    v = valid[st.session_state.index]
+
+    params = {
+        "start": v["start"],
+        "end": v["end"],
+        "autoplay": 1,
+        "mute": 1
+    }
+
+    # 🔥 ここが核心
+    if loop_section:
+        params["loop"] = 1
+        params["playlist"] = v["id"]
+
+    url_param = "&".join(
+        [f"{k}={v}" for k, v in params.items()]
     )
+
+    iframe_url = f"https://www.youtube.com/embed/{v['id']}?{url_param}"
 
     st.markdown(
         f"""
@@ -137,25 +148,16 @@ if st.session_state.playing and valid_videos:
     )
 
     st.info(
-        f"{st.session_state.video_index + 1} / {len(valid_videos)} 本目"
+        f"{st.session_state.index + 1} / {len(valid)} 本目"
     )
 
-    # 再生区間分待つ
-    time.sleep(v["end"] - v["start"])
-
-    # 次の挙動
-    if loop_section:
-        # 同じ動画・同じ区間を再生
-        pass
-    else:
-        if loop_multi:
-            st.session_state.video_index += 1
-            if st.session_state.video_index >= len(valid_videos):
-                st.session_state.video_index = 0
-        else:
-            st.session_state.playing = False
-
-    st.rerun()
+    # ▶ 次へボタン（順番再生用）
+    if loop_multi and not loop_section:
+        if st.button("▶ 次の動画へ"):
+            st.session_state.index += 1
+            if st.session_state.index >= len(valid):
+                st.session_state.index = 0
+            st.rerun()
 
 elif st.session_state.playing:
     st.error("再生可能な動画がありません")
