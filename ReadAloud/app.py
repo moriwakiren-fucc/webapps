@@ -1,3 +1,17 @@
+from openai import OpenAI
+import streamlit as st
+import os
+
+client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+
+response = client.responses.create(
+    model="gpt-4.1-mini",
+    input="こんにちは。短く自己紹介して。"
+)
+
+st.title(response.output_text)
+
+"""
 import streamlit as st
 from gtts import gTTS
 import librosa
@@ -105,3 +119,5 @@ if st.button("音声生成"):
             open(f.name, "rb"),
             file_name="accent_voice.wav"
         )
+"""
+print("")
