@@ -3,3 +3,4 @@ gTTS
 pyopenjtalk
 pyworld
 soundfile
+pkg_resources
