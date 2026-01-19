@@ -1,3 +1,4 @@
+pkg_resources
 pyopenjtalk
 pyworld
 numpy
