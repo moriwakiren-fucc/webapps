@@ -1,17 +1,5 @@
 from openai import OpenAI
-import streamlit as st
-import os
 
-client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-
-response = client.responses.create(
-    model="gpt-4.1-mini",
-    input="「昨日」という漢字の読み方のうちいずれか一般的なものを1つだけ教えて。ただし、質問の復唱など、答えの読み方以外のことは何も言わないで。"
-)
-
-st.title(response.output_text)
-
-"""
 import streamlit as st
 from gtts import gTTS
 import librosa
@@ -79,7 +67,16 @@ def synth_char(ch, accent, voice_type, sr=22050):
 # =====================
 st.title("日本語テキスト読み上げ（アクセント調整）")
 
-text = st.text_input("読み上げテキスト", "なまざかな。")
+input_text = st.text_input("読み上げテキスト", "昨日私が公園で見た、赤い帽子を被って元気に走り回っていた白い犬の飼い主は、私の父の古い友人でした。")
+
+client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+
+response = client.responses.create(
+    model="gpt-4.1-mini",
+    input=f"「{input_text}」という文章の読み方のうちいずれか一般的なものをひらがなで1つだけ教えて。ただし、質問の復唱など、答えの読み方以外のことは何も言わないで。"
+)
+
+text = response.output_text
 
 voice_type = st.selectbox(
     "声タイプ",
