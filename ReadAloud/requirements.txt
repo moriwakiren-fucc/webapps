@@ -6,12 +6,3 @@ streamlit
 gTTS
 tempfile
 os
-
-pyopenjtalk
-pyworld
-numpy
-soundfile
-streamlit
-gTTS
-tempfile
-os
