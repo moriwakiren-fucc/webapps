@@ -1,11 +1,11 @@
-import pyopenjtalk
-import pyworld as pw
-import numpy as np
-import soundfile as sf
 import streamlit as st
 from gtts import gTTS
 import tempfile
 import os
+import pyopenjtalk
+import pyworld as pw
+import numpy as np
+import soundfile as sf
 
 st.title("テキスト読み上げアプリ（gTTS）")
 
