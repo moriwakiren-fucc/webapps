@@ -1,4 +1,5 @@
-pyopenjtalk
-pyworld
+streamlit
+gTTS
+librosa
 numpy
 soundfile
