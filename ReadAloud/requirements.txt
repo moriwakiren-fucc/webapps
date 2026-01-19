@@ -1,6 +1,8 @@
-streamlit
-gTTS
 pyopenjtalk
 pyworld
+numpy
 soundfile
-pkg_resources
+streamlit
+gTTS
+tempfile
+os
