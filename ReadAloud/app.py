@@ -6,7 +6,7 @@ client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
 response = client.responses.create(
     model="gpt-4.1-mini",
-    input="こんにちは。短く自己紹介して。"
+    input="「昨日」という漢字の読み方を2通り教えて"
 )
 
 st.title(response.output_text)
