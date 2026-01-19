@@ -3,3 +3,4 @@ gTTS
 librosa
 numpy
 soundfile
+OpenAI
