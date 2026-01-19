@@ -24,7 +24,7 @@ def is_speakable(ch):
 # =====================
 # モーラ分解（OpenAI）
 # =====================
-def get_mora_text(text):
+def get_mora_text(text, client):
     res = client.responses.create(
         model="gpt-4.1-mini",
         input=(
@@ -36,14 +36,19 @@ def get_mora_text(text):
     )
     return res.output_text.strip()
 
-
 # =====================
 # アクセントカーブ生成
 # =====================
-def build_pitch_curve(level, length, max_shift=4):
-    # level: 0〜4 → -max_shift〜+max_shift
-    target = (level - 2) / 2 * max_shift
-    return np.linspace(0, target, length)
+def build_pitch_curve(accent_levels, length, max_shift=4):
+    x = np.linspace(0, 1, len(accent_levels))
+    y = np.array(accent_levels)
+
+    y = (y - 2) / 2 * max_shift  # -max ～ +max
+
+    curve_x = np.linspace(0, 1, length)
+    curve = np.interp(curve_x, x, y)
+
+    return curve
 
 
 # =====================
