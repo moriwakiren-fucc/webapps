@@ -41,7 +41,8 @@ def get_mora_text(text):
     pattern = r'[ぁ-んー][ゃゅょぁぃぅぇぉ]?'
 
     moras = re.findall(pattern, out_text)
-    return moras
+    moras_joined = "|".join(moras)
+    return moras_joined
 
 # =====================
 # アクセントカーブ生成
