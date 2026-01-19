@@ -133,11 +133,7 @@ if "mora_text" in st.session_state:
 
     st.subheader("モーラアクセント（上ほど高）")
 
-    l_moras = []
-    for mora in moras:
-        l_mora = len(mora)
-        l_moras.append(l_mora)
-    cols = st.columns(l_moras)
+    cols = st.columns(len(text))
     accent_levels = []
 
     for i, (col, mora) in enumerate(zip(cols, moras)):
