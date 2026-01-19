@@ -24,7 +24,7 @@ def is_speakable(ch):
 # =====================
 # モーラ分解（OpenAI）
 # =====================
-def get_mora_text(text, client):
+def get_mora_text(text):
     res = client.responses.create(
         model="gpt-4.1-mini",
         input=(
