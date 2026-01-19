@@ -4,4 +4,3 @@ numpy
 soundfile
 streamlit
 gTTS
-os
