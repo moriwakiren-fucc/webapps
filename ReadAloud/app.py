@@ -9,6 +9,12 @@ import os
 import re
 
 # =====================
+# OpenAI client
+# =====================
+client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
+
+
+# =====================
 # 読み上げ可能判定
 # =====================
 def is_speakable(ch):
@@ -16,100 +22,141 @@ def is_speakable(ch):
 
 
 # =====================
-# 1文字音声生成
+# モーラ分解（OpenAI）
 # =====================
-def synth_char(ch, accent_level, voice_type, sr=22050):
-    if not is_speakable(ch):
-        return np.zeros(int(sr * 0.15)), sr
+def get_mora_text(text):
+    res = client.responses.create(
+        model="gpt-4.1-mini",
+        input=(
+            "次の日本語をひらがなにし、"
+            "モーラごとに | で区切ってください。"
+            "余計な説明は不要です。\n\n"
+            f"{text}"
+        )
+    )
+    return res.output_text.strip()
+
+
+# =====================
+# アクセントカーブ生成
+# =====================
+def build_pitch_curve(level, length, max_shift=4):
+    # level: 0〜4 → -max_shift〜+max_shift
+    target = (level - 2) / 2 * max_shift
+    return np.linspace(0, target, length)
+
+
+# =====================
+# モーラ音声生成（滑らかピッチ）
+# =====================
+def synth_mora(mora, accent_level, voice_type, sr=22050):
+    if not is_speakable(mora):
+        return np.zeros(int(sr * 0.12)), sr
 
     with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as f:
-        gTTS(text=ch, lang="ja").save(f.name)
+        gTTS(text=mora, lang="ja").save(f.name)
         y, sr = librosa.load(f.name, sr=None)
 
+    # 声タイプ
     if voice_type == "男声低":
-        base_pitch, stretch = -4, 0.95
+        base_pitch = -4
+        stretch = 0.95
     elif voice_type == "男声中":
-        base_pitch, stretch = -2, 1.0
+        base_pitch = -2
+        stretch = 1.0
     elif voice_type == "男声高":
-        base_pitch, stretch = 0, 1.05
+        base_pitch = 0
+        stretch = 1.05
     elif voice_type == "女声低":
-        base_pitch, stretch = 2, 1.05
+        base_pitch = 2
+        stretch = 1.05
     elif voice_type == "女声中":
-        base_pitch, stretch = 4, 1.1
+        base_pitch = 4
+        stretch = 1.1
     else:
-        base_pitch, stretch = 6, 1.15
+        base_pitch = 6
+        stretch = 1.15
 
     y = librosa.effects.time_stretch(y, rate=stretch)
 
-    accent_shift = (2 - accent_level) * -2
-    y = librosa.effects.pitch_shift(y, sr=sr, n_steps=base_pitch + accent_shift)
+    curve = build_pitch_curve(accent_level, len(y))
 
-    return y, sr
+    frame = 1024
+    hop = 256
+    result = np.zeros_like(y)
+
+    for i in range(0, len(y) - frame, hop):
+        shift = base_pitch + curve[i]
+        result[i:i+frame] += librosa.effects.pitch_shift(
+            y[i:i+frame],
+            sr=sr,
+            n_steps=shift
+        )
+
+    return result, sr
 
 
 # =====================
 # Streamlit UI
 # =====================
-st.title("日本語テキスト読み上げ（アクセント調整）")
+st.title("日本語読み上げ（モーラ × 滑らかアクセント）")
 
 input_text = st.text_input(
     "読み上げテキスト",
-    "昨日私が公園で見た、赤い帽子を被って元気に走り回っていた白い犬の飼い主は、私の父の古い友人でした。"
+    "昨日私が公園で見た白い犬は元気でした"
 )
-
-client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-response = client.responses.create(
-    model="gpt-4.1-mini",
-    input=f"「{input_text}」という文章の読み方のうち一般的なものをひらがなで1つだけ教えて。ただし、質問の復唱など、答えの読み方以外のことは何も言わないで。"
-)
-
-text = response.output_text.strip()
 
 voice_type = st.selectbox(
     "声タイプ",
     ["男声低", "男声中", "男声高", "女声低", "女声中", "女声高"]
 )
 
-st.button("音声生成", key="top_generate")
+if st.button("① モーラ分解"):
+    mora_text = get_mora_text(input_text)
+    st.session_state["mora_text"] = mora_text
 
-# ===== 横並び表示 =====
-char_cols = st.columns(len(text))
-accent_levels = []
+if "mora_text" in st.session_state:
+    moras = st.session_state["mora_text"].split("|")
 
-for i, (col, ch) in enumerate(zip(char_cols, text)):
-    with col:
-        st.markdown(f"<div style='text-align:center;font-size:20px'>{ch}</div>", unsafe_allow_html=True)
+    st.subheader("モーラアクセント（上ほど高）")
 
-        level = st.radio(
-            "",
-            options=[0, 1, 2, 3, 4],
-            index=2,
-            key=f"accent_{i}",
-            label_visibility="collapsed",
-            format_func=lambda _: ""
-        )
+    cols = st.columns(len(moras))
+    accent_levels = []
 
-        accent_levels.append(level)
+    for i, (col, mora) in enumerate(zip(cols, moras)):
+        with col:
+            st.markdown(
+                f"<div style='text-align:center;font-weight:bold'>{mora}</div>",
+                unsafe_allow_html=True
+            )
+            level = st.radio(
+                "",
+                [0, 1, 2, 3, 4],
+                index=2,
+                key=f"m_{i}",
+                label_visibility="collapsed",
+                format_func=lambda _: ""
+            )
+            accent_levels.append(level)
 
-st.button("音声生成", key="bottom_generate")
+    st.markdown("---")
 
-# ===== 音声生成処理 =====
-if st.session_state.get("top_generate") or st.session_state.get("bottom_generate"):
-    audio = []
-    sr = None
+    if st.button("② 音声生成"):
+        audio = []
+        sr = None
 
-    for ch, level in zip(text, accent_levels):
-        y, sr = synth_char(ch, level, voice_type)
-        audio.append(y)
+        for mora, level in zip(moras, accent_levels):
+            y, sr = synth_mora(mora, level, voice_type)
+            audio.append(y)
 
-    y_all = np.concatenate(audio)
-    y_all /= np.max(np.abs(y_all))
+        y_all = np.concatenate(audio)
+        y_all /= np.max(np.abs(y_all))
 
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
-        sf.write(f.name, y_all, sr)
-        st.audio(f.name)
-        st.download_button(
-            "音声をダウンロード（wav）",
-            open(f.name, "rb"),
-            file_name="accent_voice.wav"
-        )
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+            sf.write(f.name, y_all, sr)
+            st.audio(f.name)
+            st.download_button(
+                "音声をダウンロード（wav）",
+                open(f.name, "rb"),
+                file_name="accent_voice.wav"
+            )
