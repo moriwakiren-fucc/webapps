@@ -6,7 +6,7 @@ client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
 response = client.responses.create(
     model="gpt-4.1-mini",
-    input="「昨日」という漢字の読み方を2通り教えて"
+    input="「昨日」という漢字の読み方のうちいずれか一般的なものを1つだけ教えて。ただし、質問の復唱など、答えの読み方以外のことは何も言わないで。"
 )
 
 st.title(response.output_text)
