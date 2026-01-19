@@ -1,5 +1,4 @@
 from openai import OpenAI
-
 import streamlit as st
 from gtts import gTTS
 import librosa
@@ -116,5 +115,3 @@ if st.button("音声生成"):
             open(f.name, "rb"),
             file_name="accent_voice.wav"
         )
-"""
-print("")
