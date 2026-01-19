@@ -24,17 +24,24 @@ def is_speakable(ch):
 # =====================
 # モーラ分解（OpenAI）
 # =====================
-def get_mora_text(text):
+def get_furigana(text):
     res = client.responses.create(
         model="gpt-4.1-mini",
         input=(
             "次の日本語の文章の最も一般的な読み方をひらがなに変換して、"
-            "モーラごとに | で区切ってください。"
+            "モーラ単位ごとに | で区切ってください。"
             "ただし、質問の復唱など、答えの読み方とモーラ区切り以外のことは何も言わないでください。\n\n"
             f"{text}"
         )
     )
     return res.output_text.strip()
+
+def get_mora_text(text):
+    out_text = get_furigana(text)
+    pattern = r'[ぁ-んー][ゃゅょぁぃぅぇぉ]?'
+
+    moras = re.findall(pattern, out_text)
+    return moras
 
 # =====================
 # アクセントカーブ生成
