@@ -60,7 +60,7 @@ input_text = st.text_input(
 client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 response = client.responses.create(
     model="gpt-4.1-mini",
-    input=f"「{input_text}」という文章の読み方のうち一般的なものをひらがなで1つだけ教えて。"
+    input=f"「{input_text}」という文章の読み方のうち一般的なものをひらがなで1つだけ教えて。ただし、質問の復唱など、答えの読み方以外のことは何も言わないで。"
 )
 
 text = response.output_text.strip()
