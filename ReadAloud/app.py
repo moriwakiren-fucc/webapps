@@ -16,10 +16,9 @@ def is_speakable(ch):
 
 
 # =====================
-# 1文字音声生成（安全版）
+# 1文字音声生成
 # =====================
 def synth_char(ch, accent, voice_type, sr=22050):
-    # ---- 読めない文字は無音 ----
     if not is_speakable(ch):
         silence = np.zeros(int(sr * 0.15))
         return silence, sr
@@ -28,34 +27,25 @@ def synth_char(ch, accent, voice_type, sr=22050):
         gTTS(text=ch, lang="ja").save(f.name)
         y, sr = librosa.load(f.name, sr=None)
 
-    # ---- 声タイプ設定 ----
     if voice_type == "男声低":
-        base_pitch = -4
-        stretch = 0.95
+        base_pitch, stretch = -4, 0.95
     elif voice_type == "男声中":
-        base_pitch = -2
-        stretch = 1.0
+        base_pitch, stretch = -2, 1.0
     elif voice_type == "男声高":
-        base_pitch = 0
-        stretch = 1.05
+        base_pitch, stretch = 0, 1.05
     elif voice_type == "女声低":
-        base_pitch = 2
-        stretch = 1.05
+        base_pitch, stretch = 2, 1.05
     elif voice_type == "女声中":
-        base_pitch = 4
-        stretch = 1.1
+        base_pitch, stretch = 4, 1.1
     else:
-        base_pitch = 6
-        stretch = 1.15
+        base_pitch, stretch = 6, 1.15
 
-    # ---- 話速 ----
     y = librosa.effects.time_stretch(y, rate=stretch)
 
-    # ---- アクセント（文字単位）----
     y = librosa.effects.pitch_shift(
         y,
         sr=sr,
-        n_steps=base_pitch + (accent - 1.0) * 6
+        n_steps=base_pitch + accent
     )
 
     return y, sr
@@ -64,39 +54,58 @@ def synth_char(ch, accent, voice_type, sr=22050):
 # =====================
 # Streamlit UI
 # =====================
-st.title("日本語テキスト読み上げ（アクセント調整）")
+st.title("日本語テキスト読み上げ（アクセント指定）")
 
-input_text = st.text_input("読み上げテキスト", "昨日私が公園で見た、赤い帽子を被って元気に走り回っていた白い犬の飼い主は、私の父の古い友人でした。")
+input_text = st.text_input(
+    "読み上げテキスト",
+    "昨日私が公園で見た、赤い帽子を被って元気に走り回っていた白い犬の飼い主は、私の父の古い友人でした。"
+)
 
 client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
 
 response = client.responses.create(
     model="gpt-4.1-mini",
-    input=f"「{input_text}」という文章の読み方のうちいずれか一般的なものをひらがなで1つだけ教えて。ただし、質問の復唱など、答えの読み方以外のことは何も言わないで。"
+    input=f"「{input_text}」という文章の読み方をひらがなで1つだけ示してください。"
 )
 
-text = response.output_text
+text = response.output_text.strip()
 
 voice_type = st.selectbox(
     "声タイプ",
     ["男声低", "男声中", "男声高", "女声低", "女声中", "女声高"]
 )
 
-st.subheader("文字ごとのアクセント")
-accents = []
-for i, ch in enumerate(text):
-    accents.append(
-        st.slider(
-            f"{i}:{ch}",
-            0.7,
-            1.3,
-            1.0,
-            0.05,
-            key=f"a_{i}"
-        )
-    )
+# ---- 音声生成ボタン（上）----
+generate_top = st.button("音声生成（上）")
 
-if st.button("音声生成"):
+st.subheader("アクセント指定")
+
+# ---- 文字表示（横並び）----
+char_cols = st.columns(len(text))
+for col, ch in zip(char_cols, text):
+    col.markdown(f"**{ch}**")
+
+# ---- ラジオボタン（5段階）----
+accent_map = [-3, -1, 0, 1, 3]
+accents = []
+
+radio_cols = st.columns(len(text))
+for i, (col, ch) in enumerate(zip(radio_cols, text)):
+    val = col.radio(
+        "",
+        options=list(range(5)),
+        index=2,
+        key=f"r_{i}"
+    )
+    accents.append(accent_map[val])
+
+# ---- 音声生成ボタン（下）----
+generate_bottom = st.button("音声生成（下）")
+
+# =====================
+# 音声生成処理
+# =====================
+if generate_top or generate_bottom:
     audio = []
     sr = None
 
