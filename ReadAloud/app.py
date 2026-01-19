@@ -5,11 +5,24 @@ import numpy as np
 import soundfile as sf
 import tempfile
 import os
+import re
 
 # =====================
-# 1文字音声生成
+# 読み上げ可能判定
 # =====================
-def synth_char(ch, accent, voice_type):
+def is_speakable(ch):
+    return bool(re.search(r"[ぁ-んァ-ン一-龯]", ch))
+
+
+# =====================
+# 1文字音声生成（安全版）
+# =====================
+def synth_char(ch, accent, voice_type, sr=22050):
+    # ---- 読めない文字は無音 ----
+    if not is_speakable(ch):
+        silence = np.zeros(int(sr * 0.15))
+        return silence, sr
+
     with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as f:
         gTTS(text=ch, lang="ja").save(f.name)
         y, sr = librosa.load(f.name, sr=None)
@@ -37,7 +50,7 @@ def synth_char(ch, accent, voice_type):
     # ---- 話速 ----
     y = librosa.effects.time_stretch(y, rate=stretch)
 
-    # ---- アクセント（文字ごと）----
+    # ---- アクセント（文字単位）----
     y = librosa.effects.pitch_shift(
         y,
         sr=sr,
@@ -50,9 +63,9 @@ def synth_char(ch, accent, voice_type):
 # =====================
 # Streamlit UI
 # =====================
-st.title("日本語テキスト読み上げ（アクセント調整対応）")
+st.title("日本語テキスト読み上げ（アクセント調整）")
 
-text = st.text_input("読み上げテキスト", "なまざかな")
+text = st.text_input("読み上げテキスト", "なまざかな。")
 
 voice_type = st.selectbox(
     "声タイプ",
