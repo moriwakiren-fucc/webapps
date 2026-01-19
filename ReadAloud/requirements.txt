@@ -1,2 +1,5 @@
 streamlit
 gTTS
+pyopenjtalk
+pyworld
+soundfile
