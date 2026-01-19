@@ -22,7 +22,7 @@ def is_speakable(ch):
 
 
 # =====================
-# モーラ分解（OpenAI）
+# AIふりがな取得→モーラ分解
 # =====================
 def get_furigana(text):
     res = client.responses.create(
