@@ -7,50 +7,42 @@ import tempfile
 import os
 
 # =====================
-# 音声加工関数
+# 1文字音声生成
 # =====================
-def process_voice(wav_path, accents, voice_type):
-    y, sr = librosa.load(wav_path, sr=None)
+def synth_char(ch, accent, voice_type):
+    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as f:
+        gTTS(text=ch, lang="ja").save(f.name)
+        y, sr = librosa.load(f.name, sr=None)
 
     # ---- 声タイプ設定 ----
     if voice_type == "男声低":
-        pitch = -4
+        base_pitch = -4
         stretch = 0.95
-        formant = 0.90
     elif voice_type == "男声中":
-        pitch = -2
+        base_pitch = -2
         stretch = 1.0
-        formant = 0.95
     elif voice_type == "男声高":
-        pitch = 0
+        base_pitch = 0
         stretch = 1.05
-        formant = 1.0
     elif voice_type == "女声低":
-        pitch = 2
+        base_pitch = 2
         stretch = 1.05
-        formant = 1.05
     elif voice_type == "女声中":
-        pitch = 4
+        base_pitch = 4
         stretch = 1.1
-        formant = 1.1
-    else:  # 女声高
-        pitch = 6
+    else:
+        base_pitch = 6
         stretch = 1.15
-        formant = 1.15
 
     # ---- 話速 ----
     y = librosa.effects.time_stretch(y, rate=stretch)
 
-    # ---- ピッチ ----
-    y = librosa.effects.pitch_shift(y, sr=sr, n_steps=pitch)
-
-    # ---- 擬似フォルマント ----
-    y = librosa.resample(y, orig_sr=sr, target_sr=int(sr * formant))
-    y = librosa.resample(y, orig_sr=int(sr * formant), target_sr=sr)
-
-    # ---- アクセント（全体に反映）----
-    accent_gain = np.mean(accents)
-    y *= accent_gain
+    # ---- アクセント（文字ごと）----
+    y = librosa.effects.pitch_shift(
+        y,
+        sr=sr,
+        n_steps=base_pitch + (accent - 1.0) * 6
+    )
 
     return y, sr
 
@@ -58,18 +50,17 @@ def process_voice(wav_path, accents, voice_type):
 # =====================
 # Streamlit UI
 # =====================
-st.title("日本語テキスト読み上げ")
+st.title("日本語テキスト読み上げ（アクセント調整対応）")
 
-text = st.text_area("読み上げテキスト", "文章の時にイントネーションを調整します。")
+text = st.text_input("読み上げテキスト", "なまざかな")
 
 voice_type = st.selectbox(
     "声タイプ",
     ["男声低", "男声中", "男声高", "女声低", "女声中", "女声高"]
 )
 
-# ---- 文字ごとのアクセント ----
-accents = []
 st.subheader("文字ごとのアクセント")
+accents = []
 for i, ch in enumerate(text):
     accents.append(
         st.slider(
@@ -78,32 +69,26 @@ for i, ch in enumerate(text):
             1.3,
             1.0,
             0.05,
-            key=f"accent_{i}"
+            key=f"a_{i}"
         )
     )
 
 if st.button("音声生成"):
-    with tempfile.TemporaryDirectory() as tmpdir:
-        raw_mp3 = os.path.join(tmpdir, "raw.mp3")
-        raw_wav = os.path.join(tmpdir, "raw.wav")
+    audio = []
+    sr = None
 
-        # ---- gTTS ----
-        tts = gTTS(text=text, lang="ja")
-        tts.save(raw_mp3)
+    for ch, acc in zip(text, accents):
+        y, sr = synth_char(ch, acc, voice_type)
+        audio.append(y)
 
-        # ---- mp3 → wav ----
-        y, sr = librosa.load(raw_mp3, sr=None)
-        sf.write(raw_wav, y, sr)
+    y_all = np.concatenate(audio)
+    y_all /= np.max(np.abs(y_all))
 
-        # ---- 波形加工 ----
-        y2, sr2 = process_voice(raw_wav, accents, voice_type)
-
-        out_wav = os.path.join(tmpdir, "output.wav")
-        sf.write(out_wav, y2, sr2)
-
-        st.audio(out_wav)
+    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+        sf.write(f.name, y_all, sr)
+        st.audio(f.name)
         st.download_button(
-            "音声ファイルをダウンロード（wav）",
-            open(out_wav, "rb"),
-            file_name="read_aloud.wav"
+            "音声をダウンロード（wav）",
+            open(f.name, "rb"),
+            file_name="accent_voice.wav"
         )
