@@ -18,10 +18,9 @@ def is_speakable(ch):
 # =====================
 # 1文字音声生成
 # =====================
-def synth_char(ch, accent, voice_type, sr=22050):
+def synth_char(ch, accent_level, voice_type, sr=22050):
     if not is_speakable(ch):
-        silence = np.zeros(int(sr * 0.15))
-        return silence, sr
+        return np.zeros(int(sr * 0.15)), sr
 
     with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as f:
         gTTS(text=ch, lang="ja").save(f.name)
@@ -42,11 +41,8 @@ def synth_char(ch, accent, voice_type, sr=22050):
 
     y = librosa.effects.time_stretch(y, rate=stretch)
 
-    y = librosa.effects.pitch_shift(
-        y,
-        sr=sr,
-        n_steps=base_pitch + accent
-    )
+    accent_shift = (2 - accent_level) * -2
+    y = librosa.effects.pitch_shift(y, sr=sr, n_steps=base_pitch + accent_shift)
 
     return y, sr
 
@@ -54,7 +50,7 @@ def synth_char(ch, accent, voice_type, sr=22050):
 # =====================
 # Streamlit UI
 # =====================
-st.title("日本語テキスト読み上げ（アクセント指定）")
+st.title("日本語テキスト読み上げ（アクセント調整）")
 
 input_text = st.text_input(
     "読み上げテキスト",
@@ -62,10 +58,9 @@ input_text = st.text_input(
 )
 
 client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-
 response = client.responses.create(
     model="gpt-4.1-mini",
-    input=f"「{input_text}」という文章の読み方をひらがなで1つだけ示してください。"
+    input=f"「{input_text}」という文章の読み方のうち一般的なものをひらがなで1つだけ教えて。"
 )
 
 text = response.output_text.strip()
@@ -75,42 +70,36 @@ voice_type = st.selectbox(
     ["男声低", "男声中", "男声高", "女声低", "女声中", "女声高"]
 )
 
-# ---- 音声生成ボタン（上）----
-generate_top = st.button("音声生成（上）")
+st.button("音声生成", key="top_generate")
 
-st.subheader("アクセント指定")
-
-# ---- 文字表示（横並び）----
+# ===== 横並び表示 =====
 char_cols = st.columns(len(text))
-for col, ch in zip(char_cols, text):
-    col.markdown(f"**{ch}**")
+accent_levels = []
 
-# ---- ラジオボタン（5段階）----
-accent_map = [-3, -1, 0, 1, 3]
-accents = []
+for i, (col, ch) in enumerate(zip(char_cols, text)):
+    with col:
+        st.markdown(f"<div style='text-align:center;font-size:20px'>{ch}</div>", unsafe_allow_html=True)
 
-radio_cols = st.columns(len(text))
-for i, (col, ch) in enumerate(zip(radio_cols, text)):
-    val = col.radio(
-        "",
-        options=list(range(5)),
-        index=2,
-        key=f"r_{i}"
-    )
-    accents.append(accent_map[val])
+        level = st.radio(
+            "",
+            options=[0, 1, 2, 3, 4],
+            index=2,
+            key=f"accent_{i}",
+            label_visibility="collapsed",
+            format_func=lambda _: ""
+        )
 
-# ---- 音声生成ボタン（下）----
-generate_bottom = st.button("音声生成（下）")
+        accent_levels.append(level)
 
-# =====================
-# 音声生成処理
-# =====================
-if generate_top or generate_bottom:
+st.button("音声生成", key="bottom_generate")
+
+# ===== 音声生成処理 =====
+if st.session_state.get("top_generate") or st.session_state.get("bottom_generate"):
     audio = []
     sr = None
 
-    for ch, acc in zip(text, accents):
-        y, sr = synth_char(ch, acc, voice_type)
+    for ch, level in zip(text, accent_levels):
+        y, sr = synth_char(ch, level, voice_type)
         audio.append(y)
 
     y_all = np.concatenate(audio)
