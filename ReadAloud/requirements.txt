@@ -1,6 +1,5 @@
 pyopenjtalk
 pyworld
-numpy
 soundfile
 streamlit
 gTTS
