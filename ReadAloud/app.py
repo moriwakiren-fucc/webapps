@@ -1,62 +1,71 @@
 import streamlit as st
 from gtts import gTTS
-import librosa
-import soundfile as sf
-import numpy as np
+import tempfile
 import os
-from pydub import AudioSegment
+import base64
 
-# ===== 音声パラメータ =====
+# ===== 声タイプ（Streamlit安全）=====
 VOICE_PRESETS = {
-    "男声低":  {"pitch": -3, "high_cut": 4000},
-    "男声中":  {"pitch": -1, "high_cut": 5000},
-    "男声高":  {"pitch": 1,  "high_cut": 6000},
-    "女声低":  {"pitch": 3,  "high_cut": 7000},
-    "女声中":  {"pitch": 5,  "high_cut": 8000},
-    "女声高":  {"pitch": 7,  "high_cut": 9000},
+    "男声低": {"speed": 0.85},
+    "男声中": {"speed": 0.95},
+    "男声高": {"speed": 1.05},
+    "女声低": {"speed": 1.05},
+    "女声中": {"speed": 1.15},
+    "女声高": {"speed": 1.25},
 }
 
-# ===== ピッチ変更 =====
-def change_pitch(wav_path, semitone):
-    y, sr = librosa.load(wav_path, sr=None)
-    y_shift = librosa.effects.pitch_shift(y, sr, semitone)
-    sf.write(wav_path, y_shift, sr)
-
-# ===== 音声生成（1文字） =====
-def synth_char(ch, pitch):
+# ===== 1文字読み上げ =====
+def synth_char(ch):
     tts = gTTS(text=ch, lang="ja")
-    tts.save("temp.mp3")
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
+    tts.save(tmp.name)
+    return tmp.name
 
-    audio = AudioSegment.from_mp3("temp.mp3")
-    audio.export("temp.wav", format="wav")
+# ===== HTML Audio 結合 =====
+def combine_audio(files, speeds):
+    audio_tags = []
+    for f, sp in zip(files, speeds):
+        audio_tags.append(
+            f"""
+            <audio src="data:audio/mp3;base64,{encode_audio(f)}"
+                   playbackrate="{sp}"></audio>
+            """
+        )
+    return audio_tags
 
-    change_pitch("temp.wav", pitch)
-    return AudioSegment.from_wav("temp.wav")
+def encode_audio(path):
+    with open(path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
 
-# ===== Streamlit UI =====
-st.title("日本語テキスト読み上げ（アクセント調整付き）")
+# ===== UI =====
+st.title("日本語テキスト読み上げ（Streamlit対応版）")
 
 text = st.text_input("読み上げテキスト", "なまざかな")
+voice = st.selectbox("声タイプ", VOICE_PRESETS.keys())
 
-voice_type = st.selectbox("声タイプ", list(VOICE_PRESETS.keys()))
-
-st.write("### 1文字ごとのアクセント（±半音）")
+st.write("### 1文字ごとのアクセント（話速）")
 accents = []
-for i, ch in enumerate(text):
-    val = st.slider(f"{ch}", -5.0, 5.0, 0.0, 0.5)
-    accents.append(val)
+for ch in text:
+    accents.append(st.slider(ch, 0.7, 1.3, 1.0, 0.05))
 
-if st.button("音声生成"):
-    final_audio = AudioSegment.silent(duration=0)
+if st.button("読み上げ"):
+    files = [synth_char(ch) for ch in text]
 
-    base_pitch = VOICE_PRESETS[voice_type]["pitch"]
+    speeds = [
+        VOICE_PRESETS[voice]["speed"] * acc
+        for acc in accents
+    ]
 
-    for ch, acc in zip(text, accents):
-        seg = synth_char(ch, base_pitch + acc)
-        final_audio += seg
+    html = ""
+    for f, sp in zip(files, speeds):
+        b64 = encode_audio(f)
+        html += f"""
+        <audio autoplay controls>
+          <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
+        </audio>
+        <script>
+        document.currentScript.previousElementSibling.playbackRate = {sp};
+        </script>
+        """
 
-    final_audio.export("output.mp3", format="mp3")
-
-    st.audio("output.mp3")
-    with open("output.mp3", "rb") as f:
-        st.download_button("mp3ダウンロード", f, "speech.mp3")
+    st.components.v1.html(html, height=300)
