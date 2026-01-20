@@ -1,5 +1,6 @@
 from openai import OpenAI
 import streamlit as st
+from streamlit_browser_stats import streamlit_browser_stats
 from gtts import gTTS
 import librosa
 import numpy as np
@@ -9,6 +10,9 @@ import os
 import re
 
 st.set_page_config(layout="wide")
+stats = streamlit_browser_stats()
+width = stats.get("window", {}).get("width")
+    st.write(f"現在の画面幅: {width}px")
 
 # =====================
 # OpenAI client
@@ -134,13 +138,13 @@ if "mora_text" in st.session_state:
 
     st.subheader("モーラアクセント（上ほど高）")
 
-    cols = st.columns([len(mora)*1.2 for mora in moras])
+    cols = st.columns([len(mora) for mora in moras])
     accent_levels = []
 
     for i, (col, mora) in enumerate(zip(cols, moras)):
         with col:
             st.markdown(
-                f"<div style='text-align:center;font-weight:bold;'>{mora}</div>",
+                f"<div style='text-align:left;font-weight:bold;'>{mora}</div>",
                 unsafe_allow_html=True
             )
             level = st.radio(
@@ -155,7 +159,7 @@ if "mora_text" in st.session_state:
 
     st.markdown("---")
 
-    if st.button("② 音声生成"):
+    if st.button("音声生成"):
         progress_bar = st.progress(0, text='')
         audio = []
 
