@@ -138,7 +138,7 @@ if "mora_text" in st.session_state:
     accent_levels = []
 
     for i, (col, mora) in enumerate(zip(cols, moras)):
-        if len(mora) >= 2:
+        if len(mora) < 2:
             with col:
                 st.markdown(
                     f"<div style='font-size: 100%;text-align:center;font-weight:bold'>{mora}</div>",
