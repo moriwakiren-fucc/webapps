@@ -101,7 +101,8 @@ def synth_mora(mora, accent_level, voice_type, sr=22050):
         out[i:i+frame] += librosa.effects.pitch_shift(
             y[i:i+frame],
             sr=sr,
-            n_steps=shift
+            n_steps=shift,
+            n_fft = frame
         )
 
     return out, sr
