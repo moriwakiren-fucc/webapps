@@ -9,9 +9,6 @@ import os
 import re
 
 st.set_page_config(layout="wide")
-stats = streamlit_browser_stats()
-width = stats.get("window", {}).get("width")
-st.write(f"現在の画面幅: {width}px")
 
 # =====================
 # OpenAI client
