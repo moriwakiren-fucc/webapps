@@ -113,7 +113,7 @@ def synth_mora(mora, accent_level, voice_type, sr=22050):
 # =====================
 # Streamlit UI
 # =====================
-st.title("日本語読み上げ（モーラ × 滑らかアクセント）")
+st.title("日本語読み上げ")
 
 input_text = st.text_input(
     "読み上げテキスト",
@@ -132,17 +132,14 @@ if "mora_text" in st.session_state:
     
     moras = st.session_state["mora_text"].split("|")
 
-    st.subheader("モーラアクセント（上ほど高）")
+    st.subheader("アクセント調整（上ほど高）")
 
     cols = st.columns([len(mora) + 1 if len(mora) >= 2 else len(mora) for mora in moras])
     accent_levels = []
 
     for i, (col, mora) in enumerate(zip(cols, moras)):
         with col:
-            st.markdown(
-                f"<div style='text-align:left;font-weight:bold;'>{mora}</div>",
-                unsafe_allow_html=True
-            )
+            st.write(mora)
             level = st.radio(
                 "アクセント選択",
                 [0, 1, 2, 3, 4],
