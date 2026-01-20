@@ -154,12 +154,12 @@ if "mora_text" in st.session_state:
     st.markdown("---")
 
     if st.button("② 音声生成"):
-        progress_bar = st.progress(0, text='progress bar sample')
+        progress_bar = st.progress(0, text='処理中')
         audio = []
 
         for i,(mora, level) in enumerate(zip(moras, accent_levels)):
             ip = i / len(moras)
-            progress_bar.progress(ip, text=f'{str(ip * 100)}%')
+            progress_bar.progress(ip, text=f' 処理中：{str(ip.3 * 100)}%完了')
             y, sr = synth_mora(mora, level, voice_type)
             audio.append(y)
 
