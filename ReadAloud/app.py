@@ -134,25 +134,40 @@ if "mora_text" in st.session_state:
 
     st.subheader("アクセント調整（上ほど高）")
 
-    cols = st.columns([len(mora)*1.5 if len(mora) >= 2 else len(mora) for mora in moras])
+    cols = st.columns([len(mora)*0.5 if len(mora) >= 2 else len(mora) for mora in moras])
     accent_levels = []
 
     for i, (col, mora) in enumerate(zip(cols, moras)):
-
-        with col:
-            st.markdown(
-                f"<div style='font-size: 50%;text-align:center;font-weight:bold'>{mora}</div>",
-                unsafe_allow_html=True
-            )
-            level = st.radio(
-                "アクセント選択",
-                [0, 1, 2, 3, 4],
-                index=2,
-                key=f"a_{i}",
-                label_visibility="collapsed",
-                format_func=lambda _: ""
-            )
-            accent_levels.append(level)
+        if len(mora) >= 2:
+            with col:
+                st.markdown(
+                    f"<div style='font-size: 100%;text-align:center;font-weight:bold'>{mora}</div>",
+                    unsafe_allow_html=True
+                )
+                level = st.radio(
+                    "アクセント選択",
+                    [0, 1, 2, 3, 4],
+                    index=2,
+                    key=f"a_{i}",
+                    label_visibility="collapsed",
+                    format_func=lambda _: ""
+                )
+                accent_levels.append(level)
+        if len(mora) >= 2:
+            with col:
+                st.markdown(
+                    f"<div style='font-size: 40%;text-align:center;font-weight:bold'>{mora}</div>",
+                    unsafe_allow_html=True
+                )
+                level = st.radio(
+                    "アクセント選択",
+                    [0, 1, 2, 3, 4],
+                    index=2,
+                    key=f"a_{i}",
+                    label_visibility="collapsed",
+                    format_func=lambda _: ""
+                )
+                accent_levels.append(level)
 
     st.markdown("---")
 
