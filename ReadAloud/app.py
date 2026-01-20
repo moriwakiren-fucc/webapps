@@ -153,6 +153,7 @@ if "mora_text" in st.session_state:
     st.markdown("---")
 
     if st.button("② 音声生成"):
+        st.success(body, icon="👍")
         audio = []
 
         for mora, level in zip(moras, accent_levels):
