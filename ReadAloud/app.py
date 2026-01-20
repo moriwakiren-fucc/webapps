@@ -140,7 +140,7 @@ if "mora_text" in st.session_state:
                 unsafe_allow_html=True
             )
             level = st.radio(
-                "",
+                "アクセント選択",
                 [0, 1, 2, 3, 4],
                 index=2,
                 key=f"a_{i}",
