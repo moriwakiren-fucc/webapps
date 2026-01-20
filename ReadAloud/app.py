@@ -138,7 +138,7 @@ if "mora_text" in st.session_state:
     for i, (col, mora) in enumerate(zip(cols, moras)):
         with col:
             st.markdown(
-                f"<div style='text-align:center;font-weight:bold'>{mora}</div>",
+                f"<div style='text-align:center;font-weight:bold;'>{mora}</div>",
                 unsafe_allow_html=True
             )
             level = st.radio(
@@ -154,14 +154,16 @@ if "mora_text" in st.session_state:
     st.markdown("---")
 
     if st.button("② 音声生成"):
-        progress_bar = st.progress(0, text='処理中')
+        progress_bar = st.progress(0, text='')
         audio = []
 
         for i,(mora, level) in enumerate(zip(moras, accent_levels)):
             ip = i / len(moras)
-            progress_bar.progress(ip, text=f' 処理中：{str(round(ip * 100))}%完了')
             y, sr = synth_mora(mora, level, voice_type)
             audio.append(y)
+            progress_bar.progress(ip, text=f'{str(round(ip * 100))}%完了　処理中のテキスト：{mora}')
+            if ip == 1:
+                progress_bar.progress(ip, text=f'完了！')
 
         y_all = np.concatenate(audio)
         y_all /= np.max(np.abs(y_all))
