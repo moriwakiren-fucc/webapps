@@ -153,7 +153,7 @@ if "mora_text" in st.session_state:
                     format_func=lambda _: ""
                 )
                 accent_levels.append(level)
-        if len(mora) >= 2:
+        else:
             with col:
                 st.markdown(
                     f"<div style='font-size: 40%;text-align:center;font-weight:bold'>{mora}</div>",
