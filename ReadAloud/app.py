@@ -123,10 +123,11 @@ voice_type = st.selectbox(
     ["男声低", "男声中", "男声高", "女声低", "女声中", "女声高"]
 )
 
-if st.button("① モーラ分解"):
+if st.button("テキスト読み込み"):
     st.session_state["mora_text"] = get_mora_text(input_text)
 
 if "mora_text" in st.session_state:
+    
     moras = st.session_state["mora_text"].split("|")
 
     st.subheader("モーラアクセント（上ほど高）")
@@ -153,10 +154,12 @@ if "mora_text" in st.session_state:
     st.markdown("---")
 
     if st.button("② 音声生成"):
-        st.success("ここまではOK", icon="👍")
+        progress_bar_1 = st.progress(0, text='progress bar sample')
         audio = []
 
-        for mora, level in zip(moras, accent_levels):
+        for i,(mora, level) in enumerate(zip(moras, accent_levels)):
+            ip = i / moras * 100
+            progress_bar.progress(ip, text=f'{str(ip)}%')
             y, sr = synth_mora(mora, level, voice_type)
             audio.append(y)
 
