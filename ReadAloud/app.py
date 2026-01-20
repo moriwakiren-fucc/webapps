@@ -8,6 +8,8 @@ import tempfile
 import os
 import re
 
+st.set_page_config(layout="wide")
+
 # =====================
 # OpenAI client
 # =====================
