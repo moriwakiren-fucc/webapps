@@ -4,3 +4,4 @@ gTTS
 librosa
 numpy
 soundfile
+streamlit_browser_stats
