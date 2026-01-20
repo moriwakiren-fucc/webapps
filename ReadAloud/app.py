@@ -138,8 +138,12 @@ if "mora_text" in st.session_state:
     accent_levels = []
 
     for i, (col, mora) in enumerate(zip(cols, moras)):
+
         with col:
-            st.write(mora)
+            st.markdown(
+                f"<div style='font-size: 50%;text-align:center;font-weight:bold'>{mora}</div>",
+                unsafe_allow_html=True
+            )
             level = st.radio(
                 "アクセント選択",
                 [0, 1, 2, 3, 4],
