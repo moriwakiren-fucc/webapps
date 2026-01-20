@@ -45,22 +45,21 @@ def get_mora_text(text):
     return moras_joined
 
 # =====================
-# アクセントカーブ生成
+# モーラ内アクセントカーブ
 # =====================
-def build_pitch_curve(accent_levels, length, max_shift=4):
-    x = np.linspace(0, 1, len(accent_levels))
-    y = np.array(accent_levels)
-
-    y = (y - 2) / 2 * max_shift  # -max ～ +max
-
-    curve_x = np.linspace(0, 1, length)
-    curve = np.interp(curve_x, x, y)
-
+def build_pitch_curve(level, length, max_shift=4):
+    """
+    level: 0〜4
+    中央が最大になる山型カーブ
+    """
+    target = (level - 2) / 2 * max_shift
+    x = np.linspace(-1, 1, length)
+    curve = (1 - x**2) * target
     return curve
 
 
 # =====================
-# モーラ音声生成（滑らかピッチ）
+# モーラ音声生成
 # =====================
 def synth_mora(mora, accent_level, voice_type, sr=22050):
     if not is_speakable(mora):
@@ -70,7 +69,7 @@ def synth_mora(mora, accent_level, voice_type, sr=22050):
         gTTS(text=mora, lang="ja").save(f.name)
         y, sr = librosa.load(f.name, sr=None)
 
-    # 声タイプ
+    # 声タイプ設定
     if voice_type == "男声低":
         base_pitch = -4
         stretch = 0.95
@@ -96,17 +95,17 @@ def synth_mora(mora, accent_level, voice_type, sr=22050):
 
     frame = 1024
     hop = 256
-    result = np.zeros_like(y)
+    out = np.zeros_like(y)
 
     for i in range(0, len(y) - frame, hop):
         shift = base_pitch + curve[i]
-        result[i:i+frame] += librosa.effects.pitch_shift(
+        out[i:i+frame] += librosa.effects.pitch_shift(
             y[i:i+frame],
             sr=sr,
             n_steps=shift
         )
 
-    return result, sr
+    return out, sr
 
 
 # =====================
@@ -116,7 +115,7 @@ st.title("日本語読み上げ（モーラ × 滑らかアクセント）")
 
 input_text = st.text_input(
     "読み上げテキスト",
-    "今日私が公園で見た、赤い帽子を被って元気に走り回っていた白い犬の飼い主は、私の父の旧友でした。"
+    "昨日私が公園で見た白い犬は元気でした"
 )
 
 voice_type = st.selectbox(
@@ -125,8 +124,7 @@ voice_type = st.selectbox(
 )
 
 if st.button("① モーラ分解"):
-    mora_text = get_mora_text(input_text)
-    st.session_state["mora_text"] = mora_text
+    st.session_state["mora_text"] = get_mora_text(input_text)
 
 if "mora_text" in st.session_state:
     moras = st.session_state["mora_text"].split("|")
@@ -146,7 +144,7 @@ if "mora_text" in st.session_state:
                 "",
                 [0, 1, 2, 3, 4],
                 index=2,
-                key=f"m_{i}",
+                key=f"a_{i}",
                 label_visibility="collapsed",
                 format_func=lambda _: ""
             )
@@ -156,7 +154,6 @@ if "mora_text" in st.session_state:
 
     if st.button("② 音声生成"):
         audio = []
-        sr = None
 
         for mora, level in zip(moras, accent_levels):
             y, sr = synth_mora(mora, level, voice_type)
