@@ -1,6 +1,5 @@
 from openai import OpenAI
 import streamlit as st
-from streamlit_browser_stats import streamlit_browser_stats
 from gtts import gTTS
 import librosa
 import numpy as np
