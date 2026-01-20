@@ -158,7 +158,7 @@ if "mora_text" in st.session_state:
         audio = []
 
         for i,(mora, level) in enumerate(zip(moras, accent_levels)):
-            ip = i / len(zip(moras, accent_levels))
+            ip = i / len(moras)
             y, sr = synth_mora(mora, level, voice_type)
             audio.append(y)
             progress_bar.progress(ip, text=f'{str(round(ip * 100))}%完了　処理中のテキスト：{mora}')
