@@ -1,6 +1,9 @@
+python-dateutil
 setuptools
-pyworld
+wheel
 numpy
+scipy
+pyworld
 soundfile
 librosa
 gtts
