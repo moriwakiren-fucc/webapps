@@ -142,7 +142,7 @@ if "mora_text" in st.session_state:
         if len(mora) < 2:
             with col:
                 st.markdown(
-                    f"<div style='font-size:100%;text-align:center;font-weight:bold'>{mora}</div>",
+                    f"<div style='font-size:100%;text-align:left;font-weight:bold'>{mora}</div>",
                     unsafe_allow_html=True
                 )
                 level = st.radio(
