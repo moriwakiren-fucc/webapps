@@ -5,6 +5,7 @@ import numpy as np
 import soundfile as sf
 import tempfile
 import os
+import hashlib
 
 # =====================
 # OpenAI Client
@@ -25,12 +26,28 @@ def tts_openai(text, out_path):
 # =====================
 # TTS結果をキャッシュ
 # =====================
+def text_to_hash(text):
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
 @st.cache_data(show_spinner="音声生成中...")
-def generate_base_audio(text):
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
-        tts_openai(text, f.name)
-        y, sr = librosa.load(f.name, sr=22050)
-    return y, sr
+def generate_base_audio_safe(text):
+    h = text_to_hash(text)
+    cache_path = f"/tmp/tts_{h}.wav"
+
+    if os.path.exists(cache_path):
+        y, sr = librosa.load(cache_path, sr=22050)
+        return y, sr
+
+    try:
+        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+            tts_openai(text, f.name)
+            os.rename(f.name, cache_path)
+
+        y, sr = librosa.load(cache_path, sr=22050)
+        return y, sr
+
+    except Exception as e:
+        st.error("TTS生成に失敗しました（RateLimitの可能性）")
+        raise e
 
 # =====================
 # 声タイプ設定
@@ -118,7 +135,7 @@ st.divider()
 
 # ---- 上下に生成ボタン ----
 if st.button("🔊 音声生成（TTS）"):
-    y_base, sr = generate_base_audio(text)
+    y_base, sr = generate_base_audio_safe(text)
     st.session_state["base_audio"] = (y_base, sr)
 
 if "base_audio" in st.session_state:
