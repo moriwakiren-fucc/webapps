@@ -46,13 +46,17 @@ def get_mora_text(text):
 # =====================
 # モーラ音声生成（WORLD）
 # =====================
-def synth_mora_world(mora, accent_level, voice_type):
+def synth_mora_world(mora, accent_level, voice_type, sr=22050):
     if not is_speakable(mora):
-        return np.zeros(2205), 22050
+        silence = np.zeros(int(sr * 0.12), dtype=np.float64)
+        return silence, sr
 
     with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as f:
         gTTS(text=mora, lang="ja").save(f.name)
-        y, sr = librosa.load(f.name, sr=22050)
+        y, sr = librosa.load(f.name, sr=sr)
+
+    # ★★★ ここが超重要 ★★★
+    y = y.astype(np.float64)
 
     # ---- WORLD分析 ----
     f0, t = pw.dio(y, sr)
@@ -60,31 +64,13 @@ def synth_mora_world(mora, accent_level, voice_type):
     sp = pw.cheaptrick(y, f0, t, sr)
     ap = pw.d4c(y, f0, t, sr)
 
-    # ---- 声タイプ（声道長）----
-    if voice_type == "男声低":
-        f0 *= 0.85
-        sp = pw.frequency_warp(sp, 0.9)
-    elif voice_type == "男声中":
-        f0 *= 0.95
-    elif voice_type == "男声高":
-        f0 *= 1.05
-    elif voice_type == "女声低":
-        f0 *= 1.15
-        sp = pw.frequency_warp(sp, 1.05)
-    elif voice_type == "女声中":
-        f0 *= 1.25
-        sp = pw.frequency_warp(sp, 1.1)
-    else:
-        f0 *= 1.35
-        sp = pw.frequency_warp(sp, 1.15)
-
-    # ---- アクセント（滑らか）----
-    target = (accent_level - 2) / 2 * 0.4
-    curve = np.linspace(1.0, 1.0 + target, len(f0))
-    f0 *= curve
+    # ---- アクセント制御（倍率）----
+    rate = 1.0 + (accent_level - 2) * 0.15
+    f0[f0 > 0] *= rate
 
     # ---- 再合成 ----
     y_out = pw.synthesize(f0, sp, ap, sr)
+
     return y_out, sr
 
 
