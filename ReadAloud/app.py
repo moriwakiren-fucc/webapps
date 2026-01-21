@@ -106,6 +106,7 @@ def synth_mora(mora, accent_level, voice_type, sr=22050):
             n_steps=shift,
             n_fft = frame
         )
+    out, _ = librosa.effects.trim(out, top_db=35)
 
     return out, sr
 
