@@ -110,6 +110,25 @@ def synth_mora(mora, accent_level, voice_type, sr=22050):
 
     return out, sr
 
+def crossfade_join(chunks, sr, fade_ms=10):
+    fade_len = int(sr * fade_ms / 1000)
+    result = chunks[0]
+
+    for next_chunk in chunks[1:]:
+        if len(result) < fade_len or len(next_chunk) < fade_len:
+            result = np.concatenate([result, next_chunk])
+            continue
+
+        fade_out = np.linspace(1, 0, fade_len)
+        fade_in = np.linspace(0, 1, fade_len)
+
+        result[-fade_len:] = (
+            result[-fade_len:] * fade_out +
+            next_chunk[:fade_len] * fade_in
+        )
+        result = np.concatenate([result, next_chunk[fade_len:]])
+
+    return result
 
 # =====================
 # Streamlit UI
@@ -136,7 +155,7 @@ if "mora_text" in st.session_state:
     st.subheader("アクセント調整（上ほど高）")
 
     cols = st.columns([len(mora)*0.5 if len(mora) >= 2 else len(mora) for mora in moras])
-    accent_levels = []
+    accents = []
 
     for i, (col, mora) in enumerate(zip(cols, moras)):
         if len(mora) < 2:
@@ -145,7 +164,7 @@ if "mora_text" in st.session_state:
                     f"<div style='font-size:100%;text-align:left;font-weight:bold'>{mora}</div>",
                     unsafe_allow_html=True
                 )
-                level = st.radio(
+                lvl = st.radio(
                     "アクセント選択",
                     [0, 1, 2, 3, 4],
                     index=2,
@@ -153,14 +172,14 @@ if "mora_text" in st.session_state:
                     label_visibility="collapsed",
                     format_func=lambda _: ""
                 )
-                accent_levels.append(level)
+                accents.append(lvl)
         else:
             with col:
                 st.markdown(
                     f"<div style='font-size:55%;text-align:center;font-weight:bold'>{mora}</div>",
                     unsafe_allow_html=True
                 )
-                level = st.radio(
+                lvl = st.radio(
                     "アクセント選択",
                     [0, 1, 2, 3, 4],
                     index=2,
@@ -168,23 +187,23 @@ if "mora_text" in st.session_state:
                     label_visibility="collapsed",
                     format_func=lambda _: ""
                 )
-                accent_levels.append(level)
+                accents.append(lvl)
 
     st.markdown("---")
 
     if st.button("音声生成"):
         progress_bar = st.progress(0, text='')
-        audio = []
+        chunks = []
 
-        for i,(mora, level) in enumerate(zip(moras, accent_levels)):
+        for i,(mora, lvl) in enumerate(zip(moras, accents)):
             ip = i / (len(moras)-1)
-            y, sr = synth_mora(mora, level, voice_type)
-            audio.append(y)
+            y, sr = synth_mora(mora, lvl, voice_type)
+            chunks.append(y)
             progress_bar.progress(ip, text=f'{str(round(ip * 100))}%完了　処理中のテキスト：{mora}')
             if ip == 1:
                 progress_bar.progress(ip, text=f'完了！')
 
-        y_all = np.concatenate(audio)
+        y_all = crossfade_join(chunks, sr)
         y_all /= np.max(np.abs(y_all))
 
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
