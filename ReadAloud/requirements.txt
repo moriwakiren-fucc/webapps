@@ -1,6 +1,6 @@
-streamlit
-OpenAI
-gTTS
-librosa
+pyworld
 numpy
 soundfile
+librosa
+gtts
+openai
