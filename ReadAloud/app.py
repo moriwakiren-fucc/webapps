@@ -5,6 +5,8 @@ import zipfile
 from datetime import datetime
 from pathlib import Path
 
+st.set_page_config(layout='wide')
+
 # -----------------------------
 # ページ設定
 # -----------------------------
