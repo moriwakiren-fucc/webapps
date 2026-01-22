@@ -14,9 +14,7 @@ st.title("📄 Googleスプレッドシート CSVビューア")
 # -----------------------------
 # CSV URL 入力
 # -----------------------------
-csv_url = st.text_input(
-    "GoogleスプレッドシートのCSV公開URLを入力"
-)
+csv_url = "https://docs.google.com/forms/d/e/1FAIpQLSccxWEUSiEAn-V1GVYJKG9SHSnk4f3lXHFE2j1L-w8hrqmanw/viewform?usp=publish-editor"
 
 # -----------------------------
 # CSV 読み込み
