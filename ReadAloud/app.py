@@ -14,7 +14,7 @@ st.title("📄 Googleスプレッドシート CSVビューア")
 # -----------------------------
 # CSV URL 入力
 # -----------------------------
-csv_url = "https://docs.google.com/forms/d/e/1FAIpQLSccxWEUSiEAn-V1GVYJKG9SHSnk4f3lXHFE2j1L-w8hrqmanw/viewform?usp=publish-editor"
+csv_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTiQ2zC-T-KD08eexHIlfP1-RHvj5Iu7tRA61oQpSBEvTyq0dgqr4bUlnMA2FSu1QrsTgLmnOeag8XQ/pub?gid=360713345&single=true&output=csv"
 
 # -----------------------------
 # CSV 読み込み
