@@ -77,6 +77,6 @@ for file in files:
         mukis.append("LtoR")
     else:
         st.error('aaa')
-for file, muki in files, mukis:
+for file, muki in zip(files, mukis):
     if file is not None:
         pdfforPrint(file,muki)
