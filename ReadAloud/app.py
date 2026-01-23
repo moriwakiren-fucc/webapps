@@ -70,7 +70,7 @@ def pdfforPrint(org_pdf: str, muki="LtoR"):
     pdf_buffer.close()
     st.download_button(
         label="処理結果をダウンロード",
-        data=out_writer,
+        data=pdf_buffer,
         file_name=f'{org_pdf}_BookFormt',
         mime='application/pdf'
     )
