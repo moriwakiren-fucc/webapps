@@ -60,7 +60,7 @@ def pdfforPrint(org_pdf: str, muki="LtoR"):
         mime='application/pdf'
     )
     pdf_buffer.close()
-    return f'{org_pdf}_BookFormt'
+    return f'{org_pdf.name}BookFormt'
 paths = []
 files = st.file_uploader("PDFをアップロード！", type="pdf", accept_multiple_files=True)
 for file in files:
