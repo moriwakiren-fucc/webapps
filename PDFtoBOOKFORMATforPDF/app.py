@@ -65,4 +65,4 @@ paths = []
 files = st.file_uploader("PDFをアップロード！", type="pdf", accept_multiple_files=True)
 for file in files:
     if file is not None:
-        pdfforPrint(uploaded_file, muki="RtoL")
+        pdfforPrint(file, muki="RtoL")
