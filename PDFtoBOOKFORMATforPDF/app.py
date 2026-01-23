@@ -75,7 +75,7 @@ for file in files:
             option = st.selectbox(
                 f'{file.name}の向きを指定: ',
                 ['左→右(横書き)', '右→左(縦書き)', 'aaa'],
-                index = idx,
+                index = idx
             )
             if option == '左→右(横書き)':
                 muki = "LtoR"
