@@ -53,7 +53,6 @@ def pdfforPrint(org_pdf, muki="LtoR"):
     pdf_buffer = io.BytesIO()
     out_writer.write(pdf_buffer)
     new_name = f'{org_pdf.name[:-4]}_BookFormt.pdf'
-    st.header('ダウンロード')
     st.download_button(
         label=new_name,
         data=pdf_buffer,
@@ -63,7 +62,9 @@ def pdfforPrint(org_pdf, muki="LtoR"):
     pdf_buffer.close()
     return f'{org_pdf.name}BookFormt'
 paths = []
-files = st.file_uploader("PDFをアップロード！", type="pdf", accept_multiple_files=True)
+st.header('PDFアップロード')
+files = st.file_uploader(type="pdf", accept_multiple_files=True)
+st.header('処理済みPDFダウンロード')
 for file in files:
     if file is not None:
         pdfforPrint(file, muki="RtoL")
