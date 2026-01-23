@@ -65,7 +65,7 @@ paths = []
 st.header('PDFアップロード')
 files = st.file_uploader("", type="pdf", accept_multiple_files=True)
 st.header('処理済みPDFダウンロード')
-for file, muki in zip(files, mukis):
+for file in mukis:
     if file is not None:
         if '国語' in file.name:
             idx = '右→左(縦書き)'
