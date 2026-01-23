@@ -59,7 +59,7 @@ def pdfforPrint(org_pdf: str, muki="LtoR"):
         file_name=f'{org_file}_BookFormt',
         mime='application/pdf'
     )
-"""
+    """
     # 保存先フォルダ（org_pdfと同じ場所）
     base_dir = os.path.dirname(org_pdf)
     out_dir = os.path.join(base_dir, "forPrint")
@@ -72,9 +72,8 @@ def pdfforPrint(org_pdf: str, muki="LtoR"):
     # 保存
     with open(out_pdf, "wb") as f:
         out_writer.write(f)
-"""
     return out_pdf
-
+    """
 paths = []
 """
 for n in range(1, 9):
@@ -86,5 +85,5 @@ for n in range(1, 9):
 uploaded_file = st.file_uploader("Choose a file")
 if uploaded_file is not None:
     st.write(uploaded_file)
-a = pdfforPrint(uploaded_file, muki="RtoL")
-print(a)
+    a = pdfforPrint(uploaded_file, muki="RtoL")
+    print(a)
