@@ -66,9 +66,9 @@ st.header('PDFアップロード')
 files = st.file_uploader("", type="pdf", accept_multiple_files=True)
 st.header('処理済みPDFダウンロード')
 mukis = []
-for j in range(len(files)):
+for file in files:
     option = st.selectbox(
-        'Which number do you like best?', 
+        f'{file.name}の向きを指定: ',
         ['左→右(横書き)', '右→左(縦書き)', 'aaa']
     )
     if option == '左→右(横書き)':
