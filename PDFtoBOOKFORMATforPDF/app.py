@@ -65,6 +65,11 @@ paths = []
 st.header('PDFアップロード')
 files = st.file_uploader("", type="pdf", accept_multiple_files=True)
 st.header('処理済みPDFダウンロード')
+import streamlit as st
+option = st.selectbox(
+    'Which number do you like best?', 
+    ['左→右(横書き)', '右→左(縦書き)']
+)
 for file in files:
     if file is not None:
         pdfforPrint(file, muki="RtoL")
