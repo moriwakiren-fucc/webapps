@@ -62,6 +62,7 @@ def pdfforPrint(org_pdf: str, muki="LtoR"):
     pdf_buffer.close()
     return f'{org_pdf}_BookFormt'
 paths = []
-uploaded_file = st.file_uploader("PDFをアップロード！", type="pdf", accept_multiple_files=True)
-if uploaded_file is not None:
-    pdfforPrint(uploaded_file, muki="RtoL")
+files = st.file_uploader("PDFをアップロード！", type="pdf", accept_multiple_files=True)
+for file in files:
+    if file is not None:
+        pdfforPrint(uploaded_file, muki="RtoL")
