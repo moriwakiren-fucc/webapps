@@ -71,11 +71,12 @@ for file in files:
             idx = 1
         else:
             idx = 0
-        for file in files:
+        for j, file in enumerate(files):
             option = st.selectbox(
                 f'{file.name}の向きを指定: ',
                 ['左→右(横書き)', '右→左(縦書き)', 'aaa'],
-                # index = idx
+                index = idx
+                key = j
             )
             if option == '左→右(横書き)':
                 muki = "LtoR"
