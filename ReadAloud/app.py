@@ -72,8 +72,8 @@ def pdfforPrint(org_pdf: str, muki="LtoR"):
     # 保存
     with open(out_pdf, "wb") as f:
         out_writer.write(f)
-    return out_pdf
     """
+    return f'{org_pdf}_BookFormt'
 paths = []
 """
 for n in range(1, 9):
