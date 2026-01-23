@@ -1,6 +1,6 @@
 import os
 from PyPDF2 import PdfReader, PdfWriter
-import streamlit
+import streamlit as st
 
 st.title("PDF変換ツール ページ毎→印刷用冊子形式")
 def pdfforPrint(org_pdf: str, muki="LtoR"):
