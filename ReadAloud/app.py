@@ -1,3 +1,4 @@
+import io
 import os
 from pypdf import PdfReader, PdfWriter
 import streamlit as st
@@ -31,8 +32,6 @@ def pdfforPrint(org_pdf: str, muki="LtoR"):
                 height=reader.pages[0].mediabox.height
             )
 
-    with open(str(pgs)+".pdf", "wb") as f:
-        writer_wh.write(f)
     wh_pgs = len(writer_wh.pages)
     npgs = int(wh_pgs / 2)
 
@@ -62,11 +61,13 @@ def pdfforPrint(org_pdf: str, muki="LtoR"):
     # 出力ファイル名
     base_name = os.path.splitext(os.path.basename(org_pdf))[0]
     out_pdf = os.path.join(out_dir, f"{base_name}_forPrint.pdf")
-"""
     # 保存
     with open(f'{org_pdf}_BookFormt', "wb") as f:
         out_writer.write(f)
-    out_writer.close
+    """
+    pdf_buffer = io.BytesIO()
+    writer.write(pdf_buffer)
+    pdf_buffer.close()
     st.download_button(
         label="処理結果をダウンロード",
         data=out_writer,
