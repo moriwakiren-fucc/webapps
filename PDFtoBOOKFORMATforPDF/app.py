@@ -4,7 +4,17 @@ from pypdf import PdfReader, PdfWriter
 import streamlit as st
 
 st.title("PDF ページ毎→印刷用冊子形式")
-def pdfforPrint(org_pdf, muki="LtoR"):
+def pdfforPrint(org_pdf):
+    option = st.selectbox(
+        'Which number do you like best?', 
+        ['左→右(横書き)', '右→左(縦書き)', 'aaa']
+    )
+    if option == '左→右(横書き)':
+        muki="LtoR"
+    elif option == '右→左(縦書き)':
+        muki="RtoL"
+    else:
+        st.error('aaa')
     assert muki == "RtoL" or muki == "LtoR", f"\n変数mukiに\"{muki}\"はありえないよ\n\"LtoR\"か\"RtoL\"のどちらかしてね"
     # 元PDFを読み込み
     reader = PdfReader(org_pdf)
@@ -67,13 +77,3 @@ files = st.file_uploader("", type="pdf", accept_multiple_files=True)
 st.header('処理済みPDFダウンロード')
 for file in files:
     if file is not None:
-        option = st.selectbox(
-            'Which number do you like best?', 
-            ['左→右(横書き)', '右→左(縦書き)', 'aaa']
-        )
-        if option == '左→右(横書き)':
-            pdfforPrint(file, muki="LtoR")
-        elif option == '右→左(縦書き)':
-            pdfforPrint(file, muki="RtoL")
-        else:
-            st.warning('aaa')
