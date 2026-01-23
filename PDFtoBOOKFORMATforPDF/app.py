@@ -74,7 +74,7 @@ for j, file in enumerate(files):
             idx = 0
         option = st.selectbox(
             f'{file.name}の向きを指定: ',
-            ['左→右(横書き)', '右→左(縦書き)', 'aaa'],
+            ['左→右(横書き)', '右→左(縦書き)'],
             index = idx,
             key = str(j)
         )
@@ -82,6 +82,4 @@ for j, file in enumerate(files):
             muki = "LtoR"
         elif option == '右→左(縦書き)':
             muki = "RtoL"
-        else:
-            muki = "aaa"
         pdfforPrint(file,muki)
