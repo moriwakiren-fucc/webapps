@@ -1,7 +1,8 @@
 import os
 from PyPDF2 import PdfReader, PdfWriter
+import streamlit
 
-
+st.title("PDF変換ツール ページ毎→印刷用冊子形式")
 def pdfforPrint(org_pdf: str, muki="LtoR"):
     assert muki == "RtoL" or muki == "LtoR", f"\n変数mukiに\"{muki}\"はありえないよ\n\"LtoR\"か\"RtoL\"のどちらかしてね"
     # 元PDFを読み込み
