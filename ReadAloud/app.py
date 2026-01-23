@@ -56,7 +56,7 @@ def pdfforPrint(org_pdf: str, muki="LtoR"):
     st.download_button(
         label="処理結果をダウンロード",
         data=out_writer,
-        file_name=f'{org_file}_BookFormt',
+        file_name=f'{org_pdf}_BookFormt',
         mime='application/pdf'
     )
     """
