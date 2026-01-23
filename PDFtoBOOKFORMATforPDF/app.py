@@ -54,8 +54,9 @@ def pdfforPrint(org_pdf, muki="LtoR"):
     pdf_buffer = io.BytesIO()
     out_writer.write(pdf_buffer)
     new_name = f'{org_pdf.name[:-4]}_BookFormt.pdf'
+    st.header('ダウンロード')
     st.download_button(
-        label=f'ダウンロード: {new_name}',
+        label=new_name,
         data=pdf_buffer,
         file_name=new_name,
         mime='application/pdf'
