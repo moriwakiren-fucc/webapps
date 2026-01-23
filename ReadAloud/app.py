@@ -66,7 +66,7 @@ def pdfforPrint(org_pdf: str, muki="LtoR"):
         out_writer.write(f)
     """
     pdf_buffer = io.BytesIO()
-    writer.write(pdf_buffer)
+    out_writer.write(pdf_buffer)
     pdf_buffer.close()
     st.download_button(
         label="処理結果をダウンロード",
