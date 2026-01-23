@@ -77,3 +77,4 @@ files = st.file_uploader("", type="pdf", accept_multiple_files=True)
 st.header('処理済みPDFダウンロード')
 for file in files:
     if file is not None:
+        pdfforPrint(file)
