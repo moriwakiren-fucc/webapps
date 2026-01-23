@@ -76,7 +76,7 @@ for file in files:
                 f'{file.name}の向きを指定: ',
                 ['左→右(横書き)', '右→左(縦書き)', 'aaa'],
                 index = idx
-                key = j
+                key = str(j)
             )
             if option == '左→右(横書き)':
                 muki = "LtoR"
