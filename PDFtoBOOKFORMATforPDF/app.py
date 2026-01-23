@@ -77,6 +77,7 @@ for file in files:
                 ['左→右(横書き)', '右→左(縦書き)', 'aaa'],
                 index = idx
             )
+            st.write(option)
             if option == '左→右(横書き)':
                 muki = "LtoR"
             elif option == '右→左(縦書き)':
