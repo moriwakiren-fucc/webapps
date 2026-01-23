@@ -82,5 +82,4 @@ for j, file in enumerate(files):
             muki = "LtoR"
         elif option == '右→左(縦書き)':
             muki = "RtoL"
-        with st.spinner("画像生成中です..."):
-            pdfforPrint(file,muki)
+        pdfforPrint(file,muki)
