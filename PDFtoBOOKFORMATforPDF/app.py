@@ -82,5 +82,6 @@ for j, file in enumerate(files):
         elif option == '右→左(縦書き)':
             muki = "RtoL"
         else:
+            muki == "aaa"
             st.error('aaa')
         pdfforPrint(file,muki)
