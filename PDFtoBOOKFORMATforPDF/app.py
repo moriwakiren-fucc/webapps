@@ -68,9 +68,9 @@ st.header('処理済みPDFダウンロード')
 for file in files:
     if file is not None:
         if '国語' in file.name:
-            idx = '右→左(縦書き)'
+            idx = 1
         else:
-            idx = '左→右(横書き)'
+            idx = 0
         for file in files:
             option = st.selectbox(
                 f'{file.name}の向きを指定: ',
