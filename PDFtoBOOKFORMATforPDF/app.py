@@ -78,11 +78,13 @@ for j, file in enumerate(files):
             f'{file.name}の向きを指定: ',
             ['左→右(横書き)', '右→左(縦書き)'],
             index = idx,
-            key = str(j)
+            key = 'muki' + str(j)
         )
-        name = st.text_input("ファイル名を入力", value=f'{file.name[:-4]}_BookFormat.pdf', key=str(j))
+        name = st.text_input("ファイル名を入力",
+                             value=f'{file.name[:-4]}_BookFormat.pdf',
+                             key='name' + str(j))
         if option == '左→右(横書き)':
             muki = "LtoR"
         elif option == '右→左(縦書き)':
             muki = "RtoL"
-        pdfforPrint(file,muki)
+        pdfforPrint(file, muki)
