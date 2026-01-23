@@ -56,7 +56,7 @@ def pdfforPrint(org_pdf, muki="LtoR"):
     st.download_button(
         label=f'{org_pdf.name}',
         data=pdf_buffer,
-        file_name=f'{org_pdf}_BookFormt.pdf',
+        file_name=f'{org_pdf[:-4]}_BookFormt.pdf',
         mime='application/pdf'
     )
     pdf_buffer.close()
