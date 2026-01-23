@@ -53,12 +53,6 @@ def pdfforPrint(org_pdf: str, muki="LtoR"):
             out_writer.add_page(writer_wh.pages[i + 1])
             out_writer.add_page(writer_wh.pages[wh_pgs - i - 2])
 
-    st.download_button(
-        label="処理結果をダウンロード",
-        data=out_writer,
-        file_name=f'{org_pdf}_BookFormt',
-        mime='application/pdf'
-    )
     """
     # 保存先フォルダ（org_pdfと同じ場所）
     base_dir = os.path.dirname(org_pdf)
@@ -68,12 +62,18 @@ def pdfforPrint(org_pdf: str, muki="LtoR"):
     # 出力ファイル名
     base_name = os.path.splitext(os.path.basename(org_pdf))[0]
     out_pdf = os.path.join(out_dir, f"{base_name}_forPrint.pdf")
-
+"""
     # 保存
     with open(out_pdf, "wb") as f:
         out_writer.write(f)
-    """
-    return f'{org_pdf}_BookFormt'
+    out_writer.close
+    st.download_button(
+        label="処理結果をダウンロード",
+        data=out_writer,
+        file_name=f'{org_pdf}_BookFormt',
+        mime='application/pdf'
+    )
+#    return f'{org_pdf}_BookFormt'
 paths = []
 """
 for n in range(1, 9):
