@@ -69,7 +69,8 @@ mukis = []
 for file in files:
     option = st.selectbox(
         f'{file.name}の向きを指定: ',
-        ['左→右(横書き)', '右→左(縦書き)', 'aaa']
+        ['左→右(横書き)', '右→左(縦書き)', 'aaa'],
+        '右→左(縦書き)' if '国語' in file.name else '左→右(横書き)'
     )
     if option == '左→右(横書き)':
         mukis.append("LtoR")
