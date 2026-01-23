@@ -76,7 +76,8 @@ for n in range(1, 9):
     a = pdfforPrint(path)
     print(a)
 """
-path = os.path.join("drive", "MyDrive", "共テ模試過去問", str(3) + ".pdf")
-print(path)
-a = pdfforPrint(path, muki="RtoL")
+uploaded_file = st.file_uploader("Choose a file")
+if uploaded_file is not None:
+    st.write(uploaded_file)
+a = pdfforPrint(uploaded_file, muki="RtoL")
 print(a)
