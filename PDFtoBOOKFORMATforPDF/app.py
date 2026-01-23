@@ -68,7 +68,9 @@ files = st.file_uploader("", type="pdf", accept_multiple_files=True)
 st.header('処理済みPDFダウンロード')
 for j, file in enumerate(files):
     if file is not None:
-        if '国語' in file.name:
+        if '外国語' in file.name:
+            idx = 0
+        elif '国語' in file.name:
             idx = 1
         else:
             idx = 0
