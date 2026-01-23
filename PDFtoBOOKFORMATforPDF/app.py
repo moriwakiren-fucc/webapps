@@ -3,7 +3,7 @@ import os
 from pypdf import PdfReader, PdfWriter
 import streamlit as st
 
-st.header("PDF ページ毎→印刷用冊子形式")
+st.title("PDF ページ毎→印刷用冊子形式")
 def pdfforPrint(org_pdf, muki="LtoR"):
     assert muki == "RtoL" or muki == "LtoR", f"\n変数mukiに\"{muki}\"はありえないよ\n\"LtoR\"か\"RtoL\"のどちらかしてね"
     # 元PDFを読み込み
@@ -53,6 +53,7 @@ def pdfforPrint(org_pdf, muki="LtoR"):
     pdf_buffer = io.BytesIO()
     out_writer.write(pdf_buffer)
     new_name = f'{org_pdf.name[:-4]}_BookFormt.pdf'
+    st.header('ダウンロード')
     st.download_button(
         label=new_name,
         data=pdf_buffer,
@@ -63,7 +64,6 @@ def pdfforPrint(org_pdf, muki="LtoR"):
     return f'{org_pdf.name}BookFormt'
 paths = []
 files = st.file_uploader("PDFをアップロード！", type="pdf", accept_multiple_files=True)
-st.header('ダウンロード')
 for file in files:
     if file is not None:
         pdfforPrint(file, muki="RtoL")
