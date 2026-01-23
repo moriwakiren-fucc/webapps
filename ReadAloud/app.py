@@ -74,7 +74,7 @@ def pdfforPrint(org_pdf: str, muki="LtoR"):
         mime='application/pdf'
     )
     pdf_buffer.close()
-return f'{org_pdf}_BookFormt'
+    return f'{org_pdf}_BookFormt'
 paths = []
 """
 for n in range(1, 9):
