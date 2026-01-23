@@ -64,7 +64,7 @@ def pdfforPrint(org_pdf: str, muki="LtoR"):
     out_pdf = os.path.join(out_dir, f"{base_name}_forPrint.pdf")
 """
     # 保存
-    with open(out_pdf, "wb") as f:
+    with open(f'{org_pdf}_BookFormt', "wb") as f:
         out_writer.write(f)
     out_writer.close
     st.download_button(
