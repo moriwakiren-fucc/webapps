@@ -65,7 +65,6 @@ paths = []
 st.header('PDFアップロード')
 files = st.file_uploader("", type="pdf", accept_multiple_files=True)
 st.header('処理済みPDFダウンロード')
-mukis = []
 for file, muki in zip(files, mukis):
     if file is not None:
         if '国語' in file.name:
@@ -79,9 +78,9 @@ for file, muki in zip(files, mukis):
                 idx
             )
             if option == '左→右(横書き)':
-                mukis.append("LtoR")
+                muki = "LtoR"
             elif option == '右→左(縦書き)':
-                mukis.append("LtoR")
+                muki = "LtoR"
             else:
                 st.error('aaa')
         pdfforPrint(file,muki)
