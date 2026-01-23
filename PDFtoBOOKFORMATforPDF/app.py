@@ -5,7 +5,8 @@ import streamlit as st
 
 st.title("PDF ページ毎→印刷用冊子形式")
 def pdfforPrint(org_pdf, muki):
-    assert muki == "RtoL" or muki == "LtoR", f"\n変数mukiに\"{muki}\"はありえないよ\n\"LtoR\"か\"RtoL\"のどちらかしてね"
+    if muki != "RtoL" and muki != "LtoR":
+        st.error(f"\n変数mukiに\"{muki}\"はありえないよ\n\"LtoR\"か\"RtoL\"のどちらかしてね")
     # 元PDFを読み込み
     reader = PdfReader(org_pdf)
     pgs = len(reader.pages)
@@ -83,5 +84,4 @@ for j, file in enumerate(files):
             muki = "RtoL"
         else:
             muki = "aaa"
-            st.error('aaa')
         pdfforPrint(file,muki)
