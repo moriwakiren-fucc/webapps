@@ -65,23 +65,22 @@ paths = []
 st.header('PDFアップロード')
 files = st.file_uploader("", type="pdf", accept_multiple_files=True)
 st.header('処理済みPDFダウンロード')
-for file in files:
+for j, file in enumerate(files):
     if file is not None:
         if '国語' in file.name:
             idx = 1
         else:
             idx = 0
-        for j, file in enumerate(files):
-            option = st.selectbox(
-                f'{file.name}の向きを指定: ',
-                ['左→右(横書き)', '右→左(縦書き)', 'aaa'],
-                index = idx,
-                key = str(j)
-            )
-            if option == '左→右(横書き)':
-                muki = "LtoR"
-            elif option == '右→左(縦書き)':
-                muki = "LtoR"
-            else:
-                st.error('aaa')
+        option = st.selectbox(
+            f'{file.name}の向きを指定: ',
+            ['左→右(横書き)', '右→左(縦書き)', 'aaa'],
+            index = idx,
+            key = str(j)
+        )
+        if option == '左→右(横書き)':
+            muki = "LtoR"
+        elif option == '右→左(縦書き)':
+            muki = "RtoL"
+        else:
+            st.error('aaa')
         pdfforPrint(file,muki)
