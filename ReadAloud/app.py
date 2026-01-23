@@ -1,82 +1,80 @@
-import streamlit as st
-import pandas as pd
+import os
+from PyPDF2 import PdfReader, PdfWriter
 
-# -----------------------------
-# ページ設定
-# -----------------------------
-st.set_page_config(
-    page_title="CSV表示アプリ",
-    layout="centered"
-)
 
-st.title("📄 Googleスプレッドシート CSVビューア")
+def pdfforPrint(org_pdf: str, muki="LtoR"):
+    assert muki == "RtoL" or muki == "LtoR", f"\n変数mukiに\"{muki}\"はありえないよ\n\"LtoR\"か\"RtoL\"のどちらかしてね"
+    # 元PDFを読み込み
+    reader = PdfReader(org_pdf)
+    pgs = len(reader.pages)
 
-# -----------------------------
-# CSV URL 入力
-# -----------------------------
-csv_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTiQ2zC-T-KD08eexHIlfP1-RHvj5Iu7tRA61oQpSBEvTyq0dgqr4bUlnMA2FSu1QrsTgLmnOeag8XQ/pub?gid=360713345&single=true&output=csv"
+    # 4の倍数になるように追加する白紙枚数
+    whs = 4 - pgs % 4
 
-# -----------------------------
-# CSV 読み込み
-# -----------------------------
-if csv_url:
-    try:
-        df = pd.read_csv(csv_url)
+    # 一時的に白紙追加後のPDFを作成
+    writer_wh = PdfWriter()
+    for page in reader.pages:
+        writer_wh.add_page(page)
 
-        # A, B, C列のみ使用
-        df = df.iloc[:, :3]
-        df.columns = ["timestamp", "name", "body"]
+    # 白紙ページを追加
+    if pgs > 0:
+        blank_page = writer_wh.add_blank_page(
+            width=reader.pages[0].mediabox.width,
+            height=reader.pages[0].mediabox.height
+        )
+        # add_blank_page で1枚追加されるため調整
+        for _ in range(whs - 1):
+            writer_wh.add_blank_page(
+                width=reader.pages[0].mediabox.width,
+                height=reader.pages[0].mediabox.height
+            )
 
-        # -----------------------------
-        # HTMLテーブル生成
-        # -----------------------------
-        html = """
-        <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        td {
-            padding: 8px;
-            vertical-align: top;
-        }
-        .odd td {
-            border-bottom: none;
-        }
-        .even td {
-            border-top: none;
-        }
-        .timestamp {
-            width: 30%;
-            font-size: 0.9em;
-            color: #666;
-        }
-        .name {
-            width: 70%;
-            font-weight: bold;
-        }
-        .body {
-            padding-left: 12px;
-        }
-        </style>
-        <table>
-        """
+    with open(str(pgs)+".pdf", "wb") as f:
+        writer_wh.write(f)
+    wh_pgs = len(writer_wh.pages)
+    npgs = int(wh_pgs / 2)
 
-        for _, row in df.iterrows():
-            html += f"""
-            <tr class="odd">
-                <td class="timestamp">{row['timestamp']}</td>
-                <td class="name">{row['name']}</td>
-            </tr>
-            <tr class="even">
-                <td class="body" colspan="2">{row['body']}</td>
-            </tr>
-            """
+    # 並び替え用PDF
+    out_writer = PdfWriter()
 
-        html += "</table>"
+    if muki == "RtoL":
+        # 指定ロジックに基づいてページを追加
+        for i in range(0, npgs, 2):
+            out_writer.add_page(writer_wh.pages[i])
+            out_writer.add_page(writer_wh.pages[wh_pgs - i - 1])
+            out_writer.add_page(writer_wh.pages[wh_pgs - i - 2])
+            out_writer.add_page(writer_wh.pages[i + 1])
+    elif muki == "LtoR":
+        for i in range(0, npgs, 2):
+            out_writer.add_page(writer_wh.pages[wh_pgs - i - 1])
+            out_writer.add_page(writer_wh.pages[i])
+            out_writer.add_page(writer_wh.pages[i + 1])
+            out_writer.add_page(writer_wh.pages[wh_pgs - i - 2])
 
-        st.markdown(html, unsafe_allow_html=True)
+    # 保存先フォルダ（org_pdfと同じ場所）
+    base_dir = os.path.dirname(org_pdf)
+    out_dir = os.path.join(base_dir, "forPrint")
+    os.makedirs(out_dir, exist_ok=True)
 
-    except Exception as e:
-        st.error("CSVの読み込みに失敗しました")
-        st.exception(e)
+    # 出力ファイル名
+    base_name = os.path.splitext(os.path.basename(org_pdf))[0]
+    out_pdf = os.path.join(out_dir, f"{base_name}_forPrint.pdf")
+
+    # 保存
+    with open(out_pdf, "wb") as f:
+        out_writer.write(f)
+
+    return out_pdf
+
+paths = []
+"""
+for n in range(1, 9):
+    path = os.path.join("drive", "MyDrive", "共テ模試過去問", str(n) + ".pdf")
+    print(path)
+    a = pdfforPrint(path)
+    print(a)
+"""
+path = os.path.join("drive", "MyDrive", "共テ模試過去問", str(3) + ".pdf")
+print(path)
+a = pdfforPrint(path, muki="RtoL")
+print(a)
