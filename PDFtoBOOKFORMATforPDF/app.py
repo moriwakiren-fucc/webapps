@@ -51,20 +51,6 @@ def pdfforPrint(org_pdf: str, muki="LtoR"):
             out_writer.add_page(writer_wh.pages[i])
             out_writer.add_page(writer_wh.pages[i + 1])
             out_writer.add_page(writer_wh.pages[wh_pgs - i - 2])
-
-    """
-    # 保存先フォルダ（org_pdfと同じ場所）
-    base_dir = os.path.dirname(org_pdf)
-    out_dir = os.path.join(base_dir, "forPrint")
-    os.makedirs(out_dir, exist_ok=True)
-
-    # 出力ファイル名
-    base_name = os.path.splitext(os.path.basename(org_pdf))[0]
-    out_pdf = os.path.join(out_dir, f"{base_name}_forPrint.pdf")
-    # 保存
-    with open(f'{org_pdf}_BookFormt', "wb") as f:
-        out_writer.write(f)
-    """
     pdf_buffer = io.BytesIO()
     out_writer.write(pdf_buffer)
     st.download_button(
