@@ -65,5 +65,4 @@ paths = []
 uploaded_file = st.file_uploader("Choose a file")
 if uploaded_file is not None:
     st.write(uploaded_file)
-    a = pdfforPrint(uploaded_file, muki="RtoL")
-    print(a)
+    pdfforPrint(uploaded_file, muki="RtoL")
