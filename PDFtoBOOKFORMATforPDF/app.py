@@ -5,7 +5,7 @@ import streamlit as st
 
 st.title("PDF変換ツール")
 st.header("ページ毎→印刷用冊子形式")
-def pdfforPrint(org_pdf: str, muki="LtoR"):
+def pdfforPrint(org_pdf, muki="LtoR"):
     assert muki == "RtoL" or muki == "LtoR", f"\n変数mukiに\"{muki}\"はありえないよ\n\"LtoR\"か\"RtoL\"のどちらかしてね"
     # 元PDFを読み込み
     reader = PdfReader(org_pdf)
@@ -54,7 +54,7 @@ def pdfforPrint(org_pdf: str, muki="LtoR"):
     pdf_buffer = io.BytesIO()
     out_writer.write(pdf_buffer)
     st.download_button(
-        label=f'処理済み{org_pdf}をダウンロード',
+        label=f'処理済みをダウンロード',
         data=pdf_buffer,
         file_name=f'{org_pdf}_BookFormt.pdf',
         mime='application/pdf'
