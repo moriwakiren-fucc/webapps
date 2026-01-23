@@ -76,13 +76,6 @@ def pdfforPrint(org_pdf: str, muki="LtoR"):
     pdf_buffer.close()
     return f'{org_pdf}_BookFormt'
 paths = []
-"""
-for n in range(1, 9):
-    path = os.path.join("drive", "MyDrive", "共テ模試過去問", str(n) + ".pdf")
-    print(path)
-    a = pdfforPrint(path)
-    print(a)
-"""
 uploaded_file = st.file_uploader("Choose a file")
 if uploaded_file is not None:
     st.write(uploaded_file)
