@@ -67,14 +67,14 @@ def pdfforPrint(org_pdf: str, muki="LtoR"):
     """
     pdf_buffer = io.BytesIO()
     out_writer.write(pdf_buffer)
-    pdf_buffer.close()
     st.download_button(
         label="処理結果をダウンロード",
         data=pdf_buffer,
         file_name=f'{org_pdf}_BookFormt',
         mime='application/pdf'
     )
-#    return f'{org_pdf}_BookFormt'
+    pdf_buffer.close()
+return f'{org_pdf}_BookFormt'
 paths = []
 """
 for n in range(1, 9):
