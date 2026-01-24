@@ -6,7 +6,7 @@ import streamlit as st
 st.title("PDF ページ毎→印刷用冊子形式")
 def pdfforPrint(org_pdf, muki):
     if muki != "RtoL" and muki != "LtoR":
-        st.error(f"\n変数mukiに\"{muki}\"はありえないよ\n\"LtoR\"か\"RtoL\"のどちらかしてね")
+        st.error("エラー")
     # 元PDFを読み込み
     reader = PdfReader(org_pdf)
     pgs = len(reader.pages)
@@ -81,7 +81,8 @@ for j, file in enumerate(files):
             key = 'muki' + str(j)
         )
         name = st.text_input("ファイル名を入力",
-                             value=f'{file.name[:-4]}_BookFormat.pdf',
+                             value=f'{file.name[:-4]}_BookFormat',
+                             place_holder='ファイル名のうち、\'.pdf\'よりも前の部分を入力'
                              key='name' + str(j))
         if option == '左→右(横書き)':
             muki = "LtoR"
