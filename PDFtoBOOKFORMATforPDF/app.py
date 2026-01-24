@@ -80,9 +80,8 @@ for j, file in enumerate(files):
             index = idx,
             key = 'muki' + str(j)
         )
-        name = st.text_input("ファイル名を入力",
+        name = st.text_input('ファイル名のうち、\'.pdf\'よりも前の部分を入力',
                              value=f'{file.name[:-4]}_BookFormat',
-                             place_holder='ファイル名のうち、\'.pdf\'よりも前の部分を入力'
                              key='name' + str(j))
         if option == '左→右(横書き)':
             muki = "LtoR"
