@@ -78,7 +78,7 @@ for j, file in enumerate(files):
             '向き',
             ['左→右(横書き)', '右→左(縦書き)'],
             index = idx,
-            key = 'muki' + str(j)
+            key = 'muki' + str(j),
             label_visibility="collapsed"
         )
         f_name = st.text_input('ファイル名のうち、\' .pdf \'よりも前の部分を入力',
