@@ -55,7 +55,7 @@ def pdfforPrint(org_pdf, muki, f_name):
     out_writer.write(pdf_buffer)
     new_name = f'{f_name}.pdf'
     st.download_button(
-        label=new_name,
+        label=f'{f_name}をダウンロード',
         data=pdf_buffer,
         file_name=new_name,
         mime='application/pdf'
