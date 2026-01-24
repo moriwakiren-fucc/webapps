@@ -67,7 +67,9 @@ st.header('PDFアップロード')
 files = st.file_uploader("", type="pdf", accept_multiple_files=True)
 st.header('処理済みPDFダウンロード')
 for j, file in enumerate(files):
+    
     if file is not None:
+        st.subheader(file.name)
         if '外国語' in file.name:
             idx = 0
         elif '国語' in file.name:
@@ -75,11 +77,10 @@ for j, file in enumerate(files):
         else:
             idx = 0
         option = st.selectbox(
-            '向き',
+            '向きを指定',
             ['左→右(横書き)', '右→左(縦書き)'],
             index = idx,
-            key = 'muki' + str(j),
-            label_visibility="collapsed"
+            key = 'muki' + str(j)
         )
         f_name = st.text_input('ファイル名のうち、\' .pdf \'よりも前の部分を入力',
                              value=f'{file.name[:-4]}_BookFormat',
@@ -89,3 +90,4 @@ for j, file in enumerate(files):
         elif option == '右→左(縦書き)':
             muki = "RtoL"
         pdfforPrint(file, muki, f_name)
+        st.divider()
