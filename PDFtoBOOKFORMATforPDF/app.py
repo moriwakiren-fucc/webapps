@@ -75,10 +75,11 @@ for j, file in enumerate(files):
         else:
             idx = 0
         option = st.selectbox(
-            f'{file.name}の向きを指定: ',
+            '向き',
             ['左→右(横書き)', '右→左(縦書き)'],
             index = idx,
             key = 'muki' + str(j)
+            label_visibility="collapsed"
         )
         f_name = st.text_input('ファイル名のうち、\' .pdf \'よりも前の部分を入力',
                              value=f'{file.name[:-4]}_BookFormat',
