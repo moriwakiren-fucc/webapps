@@ -4,7 +4,7 @@ from pypdf import PdfReader, PdfWriter
 import streamlit as st
 
 st.title("PDF ページ毎→印刷用冊子形式")
-def pdfforPrint(org_pdf, muki):
+def pdfforPrint(org_pdf, muki, f_name):
     if muki != "RtoL" and muki != "LtoR":
         st.error("エラー")
     # 元PDFを読み込み
@@ -53,7 +53,7 @@ def pdfforPrint(org_pdf, muki):
             out_writer.add_page(writer_wh.pages[wh_pgs - i - 2])
     pdf_buffer = io.BytesIO()
     out_writer.write(pdf_buffer)
-    new_name = f'{org_pdf.name[:-4]}_BookFormt.pdf'
+    new_name = f'{f_name}.pdf'
     st.download_button(
         label=new_name,
         data=pdf_buffer,
@@ -80,11 +80,11 @@ for j, file in enumerate(files):
             index = idx,
             key = 'muki' + str(j)
         )
-        name = st.text_input('ファイル名のうち、\' .pdf \'よりも前の部分を入力',
+        f_name = st.text_input('ファイル名のうち、\' .pdf \'よりも前の部分を入力',
                              value=f'{file.name[:-4]}_BookFormat',
                              key='name' + str(j))
         if option == '左→右(横書き)':
             muki = "LtoR"
         elif option == '右→左(縦書き)':
             muki = "RtoL"
-        pdfforPrint(file, muki)
+        pdfforPrint(file, muki, f_name)
