@@ -8,7 +8,7 @@ st.title("PDF ページ毎→印刷用冊子形式")
 def pdfforPrint(org_pdf, muki, f_name, hyoushi=False, ura=False):
     if hyoushi or ura:
         with st.status("計算を開始します...", expanded=True) as status:
-            st.write()
+            st.write('HY')
             time.sleep(0.1)
         status.update(label="計算が完了しました ✅", state="complete")
     if muki != "RtoL" and muki != "LtoR":
