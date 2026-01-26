@@ -120,5 +120,5 @@ for j, file in enumerate(files):
             with placeholder.container():
                 pdfforPrint(file, muki, f_name, hyoushi, ura)
                 time.sleep(0.2)
-                status.update(label=text, state="complete")
+            status.update(label=text, state="complete")
     st.divider()
