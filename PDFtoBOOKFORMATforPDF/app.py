@@ -74,14 +74,6 @@ def pdfforPrint(org_pdf, muki, f_name, hyoushi=False, ura=False):
         mime='application/pdf'
     )
     pdf_buffer.close()
-    if hyoushi and ura:
-        return "表紙が追加され、最終ページは白紙になっています"
-    elif hyoushi:
-        return "表紙が追加されました。"
-    elif ura:
-        return "最終ページは白紙になっています。"
-    else:
-        return "PDF処理が完了しました。"
     return f'{org_pdf.name}BookFormt'
 paths = []
 st.header('PDFアップロード')
@@ -118,7 +110,7 @@ for j, file in enumerate(files):
         if hyoushi and ura:
             text = "表紙が追加され、最終ページが白紙になりました。"
         elif hyoushi:
-            text = "表紙が追加されています。"
+            text = "表紙が追加されました。"
         elif ura:
             text = "最終ページが白紙になりました。"
         else:
@@ -126,5 +118,5 @@ for j, file in enumerate(files):
         with st.status("処理中", expanded=True) as status:
             pdfforPrint(file, muki, f_name, hyoushi, ura)
             time.sleep(0.2)
-        status.update(label=text, state="complete")
-        st.divider()
+            status.update(label=text, state="complete")
+    st.divider()
