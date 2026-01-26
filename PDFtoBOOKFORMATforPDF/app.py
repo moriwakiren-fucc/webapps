@@ -1,3 +1,4 @@
+import time
 import io
 import os
 from pypdf import PdfReader, PdfWriter
