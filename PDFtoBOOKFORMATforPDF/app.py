@@ -67,12 +67,6 @@ def pdfforPrint(org_pdf, muki, f_name, hyoushi=False, ura=False):
     pdf_buffer = io.BytesIO()
     out_writer.write(pdf_buffer)
     new_name = f"{f_name}.pdf"
-    st.download_button(
-        label='ダウンロード',
-        data=pdf_buffer,
-        file_name=new_name,
-        mime='application/pdf'
-    )
     return pdf_buffer, new_name
     # pdf_buffer.close()
 paths = []
@@ -115,8 +109,16 @@ for j, file in enumerate(files):
             text = "最終ページが白紙になりました。"
         else:
             text = "PDF処理が完了しました。"
+        l = []
         with st.status("処理中", expanded=True) as status:
-            pdfforPrint(file, muki, f_name, hyoushi, ura)
+            l = pdfforPrint(file, muki, f_name, hyoushi, ura)
             time.sleep(0.2)
             status.update(label=text, state="complete")
+        st.download_button(
+            label='ダウンロード',
+            data=l[0],
+            file_name=l[1],
+            mime='application/pdf',
+            key = 'download' + str(j)
+        )
     st.divider()
