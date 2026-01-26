@@ -73,8 +73,8 @@ def pdfforPrint(org_pdf, muki, f_name, hyoushi=False, ura=False):
         file_name=new_name,
         mime='application/pdf'
     )
-    pdf_buffer.close()
-    return f'{org_pdf.name}BookFormt'
+    return pdf_buffer, new_name
+    # pdf_buffer.close()
 paths = []
 st.header('PDFアップロード')
 files = st.file_uploader("", type="pdf", accept_multiple_files=True)
