@@ -116,11 +116,11 @@ for j, file in enumerate(files):
         elif option == '右→左(縦書き)':
             muki = "RtoL"
         if hyoushi and ura:
-            text = "表紙が追加され、最終ページは白紙になっています。"
+            text = "表紙が追加され、最終ページが白紙になりました。"
         elif hyoushi:
             text = "表紙が追加されています。"
         elif ura:
-            text = "最終ページは白紙になっています。"
+            text = "最終ページが白紙になりました。"
         else:
             text = "PDF処理が完了しました。"
         with st.status("処理中", expanded=True) as status:
