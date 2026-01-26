@@ -6,6 +6,10 @@ import streamlit as st
 
 st.title("PDF ページ毎→印刷用冊子形式")
 def pdfforPrint(org_pdf, muki, f_name, hyoushi=False, ura=False):
+    placeholder = st.empty()
+    # 中身を表示
+    with placeholder.container():
+        st.write("この内容は消えます")
     if muki != "RtoL" and muki != "LtoR":
         st.error("エラー")
     # 元PDFを読み込み
