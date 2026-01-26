@@ -98,7 +98,7 @@ for j, file in enumerate(files):
         hyoushi = st.checkbox('表紙を追加',
                               key = 'hyoushi' + str(j))
         ura = st.checkbox('最終ページを必ず白紙にする',
-                          key = 'hyoushi' + str(j))
+                          key = 'ura' + str(j))
         if option == '左→右(横書き)':
             muki = "LtoR"
         elif option == '右→左(縦書き)':
