@@ -14,6 +14,8 @@ def pdfforPrint(org_pdf, muki, f_name, hyoushi=False, ura=False):
 
     # 4の倍数になるように追加する白紙枚数
     whs = 4 - pgs // 4
+    if hyoushi:
+        whs = whs - 1
     if whs == 4:
         whs = 0
 
@@ -24,7 +26,6 @@ def pdfforPrint(org_pdf, muki, f_name, hyoushi=False, ura=False):
 
     # 白紙ページを追加
     if hyoushi:
-        whs = whs - 1
         blank_page = writer_wh.insert_blank_page(
             width=reader.pages[0].mediabox.width,
             height=reader.pages[0].mediabox.height,
