@@ -4,7 +4,7 @@ from pypdf import PdfReader, PdfWriter
 import streamlit as st
 
 st.title("PDF ページ毎→印刷用冊子形式")
-def pdfforPrint(org_pdf, muki, f_name, hyoushi=False):
+def pdfforPrint(org_pdf, muki, f_name, hyoushi=False, ura=False):
     if muki != "RtoL" and muki != "LtoR":
         st.error("エラー")
     # 元PDFを読み込み
@@ -13,6 +13,10 @@ def pdfforPrint(org_pdf, muki, f_name, hyoushi=False):
 
     # 4の倍数になるように追加する白紙枚数
     whs = 4 - pgs % 4
+    if hyoushi:
+        whs = whs - 1
+    if ura and whs == 0:
+        whs = whs + 4
 
     # 一時的に白紙追加後のPDFを作成
     writer_wh = PdfWriter()
@@ -20,11 +24,16 @@ def pdfforPrint(org_pdf, muki, f_name, hyoushi=False):
         writer_wh.add_page(page)
 
     # 白紙ページを追加
-    if pgs > 0:
+    if hyoushi:
         blank_page = writer_wh.insert_blank_page(
             width=reader.pages[0].mediabox.width,
             height=reader.pages[0].mediabox.height,
             index = 1
+        )
+    if pgs > 0:
+        blank_page = writer_wh.add_blank_page(
+            width=reader.pages[0].mediabox.width,
+            height=reader.pages[0].mediabox.height
         )
         # add_blank_page で1枚追加されるため調整
         for _ in range(whs - 1):
@@ -85,10 +94,14 @@ for j, file in enumerate(files):
         )
         f_name = st.text_input('ファイル名のうち、\' .pdf \'よりも前の部分を入力',
                              value=f'{file.name[:-4]}_BookFormat',
-                             key='name' + str(j))
+                             key = 'name' + str(j))
+        hyoushi = st.checkbox('表紙を追加',
+                              key = 'hyoushi' + str(j))
+        ura = st.checkbox('最終ページを必ず白紙にする',
+                          key = 'hyoushi' + str(j))
         if option == '左→右(横書き)':
             muki = "LtoR"
         elif option == '右→左(縦書き)':
             muki = "RtoL"
-        pdfforPrint(file, muki, f_name)
+        pdfforPrint(file, muki, f_name, hoyushi, ura)
         st.divider()
