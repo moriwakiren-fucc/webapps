@@ -33,7 +33,7 @@ def pdfforPrint(org_pdf, muki, f_name, hyoushi=False, ura=False):
         )
         if ura and whs <= 0:
             whs = whs + 4
-    if pgs > 0:
+    if whs > 0:
         blank_page = writer_wh.add_blank_page(
             width=reader.pages[0].mediabox.width,
             height=reader.pages[0].mediabox.height
