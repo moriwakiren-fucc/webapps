@@ -110,7 +110,7 @@ for j, file in enumerate(files):
         else:
             text = "PDF処理が完了しました。"
         l = []
-        with st.status("処理中", expanded=True) as status:
+        with st.status("処理中", expanded=False) as status:
             l = pdfforPrint(file, muki, f_name, hyoushi, ura)
             time.sleep(0.2)
             status.update(label=text, state="complete")
