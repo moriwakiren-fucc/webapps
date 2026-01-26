@@ -72,6 +72,14 @@ def pdfforPrint(org_pdf, muki, f_name, hyoushi=False, ura=False):
         mime='application/pdf'
     )
     pdf_buffer.close()
+    if hyoushi and ura:
+        return "表紙が追加され、最終ページは白紙になっています"
+    elif hyoushi:
+        return "表紙が追加されました。"
+    elif ura:
+        return "最終ページは白紙になっています。"
+    else:
+        return "PDF処理が完了しました。"
     return f'{org_pdf.name}BookFormt'
 paths = []
 st.header('PDFアップロード')
@@ -100,13 +108,21 @@ for j, file in enumerate(files):
                               key = 'hyoushi' + str(j))
         ura = st.checkbox('最終ページを必ず白紙にする',
                           key = 'ura' + str(j))
+        text=""
         if option == '左→右(横書き)':
             muki = "LtoR"
         elif option == '右→左(縦書き)':
             muki = "RtoL"
-        if hyoushi or ura:
-            with st.status("計算を開始します...", expanded=True) as status:
-                time.sleep(0.1)
-            status.update(label="計算が完了しました ✅", state="complete")
-        pdfforPrint(file, muki, f_name, hyoushi, ura)
+        if hyoushi and ura:
+            text = "表紙が追加され、最終ページは白紙になっています。"
+        elif hyoushi:
+            text = "表紙が追加されました。"
+        elif ura:
+            text = "最終ページは白紙になっています。"
+        else:
+            text = "PDF処理が完了しました。"
+        with st.status("処理中", expanded=True) as status:
+            pdfforPrint(file, muki, f_name, hyoushi, ura)
+            time.sleep(0.2)
+        status.update(label=text, state="complete")
         st.divider()
