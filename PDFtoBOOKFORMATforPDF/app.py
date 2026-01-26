@@ -118,7 +118,6 @@ for j, file in enumerate(files):
         with st.status("処理中", expanded=True) as status:
             placeholder = st.empty()
             with placeholder.container():
-                placeholder.empty()
                 pdfforPrint(file, muki, f_name, hyoushi, ura)
                 time.sleep(0.2)
                 status.update(label=text, state="complete")
