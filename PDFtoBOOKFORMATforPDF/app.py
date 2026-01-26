@@ -106,7 +106,6 @@ for j, file in enumerate(files):
             muki = "RtoL"
         if hyoushi or ura:
             with st.status("計算を開始します...", expanded=True) as status:
-                pdfforPrint(file, muki, f_name, hyoushi, ura)
                 time.sleep(0.1)
             status.update(label="計算が完了しました ✅", state="complete")
         pdfforPrint(file, muki, f_name, hyoushi, ura)
