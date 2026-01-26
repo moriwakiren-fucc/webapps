@@ -72,9 +72,6 @@ def pdfforPrint(org_pdf, muki, f_name, hyoushi=False, ura=False):
         mime='application/pdf'
     )
     pdf_buffer.close()
-    if hyoushi or ura:
-        with st.spinner("計算中です...しばらくお待ちください"):
-            time.sleep(5)
     return f'{org_pdf.name}BookFormt'
 paths = []
 st.header('PDFアップロード')
