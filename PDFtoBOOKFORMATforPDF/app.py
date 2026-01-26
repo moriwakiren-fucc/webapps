@@ -103,5 +103,5 @@ for j, file in enumerate(files):
             muki = "LtoR"
         elif option == '右→左(縦書き)':
             muki = "RtoL"
-        pdfforPrint(file, muki, f_name, hoyushi, ura)
+        pdfforPrint(file, muki, f_name, hyoushi, ura)
         st.divider()
