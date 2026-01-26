@@ -14,10 +14,6 @@ def pdfforPrint(org_pdf, muki, f_name, hyoushi=False, ura=False):
 
     # 4の倍数になるように追加する白紙枚数
     whs = 4 - pgs % 4
-    if hyoushi:
-        whs = whs - 1
-    if ura and whs == 0:
-        whs = whs + 4
 
     # 一時的に白紙追加後のPDFを作成
     writer_wh = PdfWriter()
@@ -26,11 +22,14 @@ def pdfforPrint(org_pdf, muki, f_name, hyoushi=False, ura=False):
 
     # 白紙ページを追加
     if hyoushi:
+        whs = whs - 1
         blank_page = writer_wh.insert_blank_page(
             width=reader.pages[0].mediabox.width,
             height=reader.pages[0].mediabox.height,
             index = 1
         )
+        if ura and whs <= 0:
+            whs = whs + 4
     if pgs > 0:
         blank_page = writer_wh.add_blank_page(
             width=reader.pages[0].mediabox.width,
@@ -116,7 +115,7 @@ for j, file in enumerate(files):
         if hyoushi and ura:
             text = "表紙が追加され、最終ページは白紙になっています。"
         elif hyoushi:
-            text = "表紙が追加されました。"
+            text = "表紙が追加されています。"
         elif ura:
             text = "最終ページは白紙になっています。"
         else:
