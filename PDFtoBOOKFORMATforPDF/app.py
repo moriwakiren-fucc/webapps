@@ -4,7 +4,7 @@ from pypdf import PdfReader, PdfWriter
 import streamlit as st
 
 st.title("PDF ページ毎→印刷用冊子形式")
-def pdfforPrint(org_pdf, muki, f_name):
+def pdfforPrint(org_pdf, muki, f_name, hyoushi=False):
     if muki != "RtoL" and muki != "LtoR":
         st.error("エラー")
     # 元PDFを読み込み
@@ -21,9 +21,10 @@ def pdfforPrint(org_pdf, muki, f_name):
 
     # 白紙ページを追加
     if pgs > 0:
-        blank_page = writer_wh.add_blank_page(
+        blank_page = writer_wh.insert_blank_page(
             width=reader.pages[0].mediabox.width,
-            height=reader.pages[0].mediabox.height
+            height=reader.pages[0].mediabox.height,
+            index = 1
         )
         # add_blank_page で1枚追加されるため調整
         for _ in range(whs - 1):
