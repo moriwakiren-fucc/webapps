@@ -124,9 +124,7 @@ for j, file in enumerate(files):
         else:
             text = "PDF処理が完了しました。"
         with st.status("処理中", expanded=True) as status:
-            empty = st.empty()
-            with empty.container():
-                pdfforPrint(file, muki, f_name, hyoushi, ura)
+            pdfforPrint(file, muki, f_name, hyoushi, ura)
             time.sleep(0.2)
         status.update(label=text, state="complete")
         st.divider()
