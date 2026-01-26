@@ -13,7 +13,9 @@ def pdfforPrint(org_pdf, muki, f_name, hyoushi=False, ura=False):
     pgs = len(reader.pages)
 
     # 4の倍数になるように追加する白紙枚数
-    whs = 4 - pgs % 4
+    whs = 4 - pgs // 4
+    if whs == 4:
+        whs = 0
 
     # 一時的に白紙追加後のPDFを作成
     writer_wh = PdfWriter()
