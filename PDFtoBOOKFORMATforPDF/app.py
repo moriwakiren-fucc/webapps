@@ -136,7 +136,7 @@ for j, file in enumerate(files):
             container.button(
                 label = "処理中",
                 disabled=True,
-                key = 'predownload_' + str(j)
+                key = 'predownload_1_1' + str(j)
             )
         else:
             container.download_button(
@@ -144,7 +144,7 @@ for j, file in enumerate(files):
                 data=l[0],
                 file_name=l[1],
                 mime='application/pdf',
-                key = 'download' + str(j)
+                key = 'download_1_' + str(j)
             )
             l = pdfforPrint(file, muki, f_name, hyoushi, ura)
         st.divider()
