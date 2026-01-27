@@ -121,7 +121,7 @@ for j, file in enumerate(files):
                     key = 'predownload_' + str(j)
                 )
             else:
-                st.download_button(
+                container.download_button(
                     label='ダウンロード',
                     data=l[0],
                     file_name=l[1],
@@ -137,7 +137,7 @@ for j, file in enumerate(files):
                     key = 'predownload_' + str(j)
                 )
             else:
-                st.download_button(
+                container.download_button(
                     label='ダウンロード',
                     data=l[0],
                     file_name=l[1],
