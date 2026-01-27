@@ -114,7 +114,6 @@ for j, file in enumerate(files):
         l = []
         with st.status("処理中", expanded=False) as status:
             l = []
-            time.sleep(3)
             if not l:
                 container.button(
                     label = "処理中",
@@ -129,6 +128,7 @@ for j, file in enumerate(files):
                     mime='application/pdf',
                     key = 'download_' + str(j)
                 )
+            time.sleep(3)
             l = pdfforPrint(file, muki, f_name, hyoushi, ura)
             time.sleep(0.2)
             if not l:
