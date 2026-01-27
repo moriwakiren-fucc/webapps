@@ -117,13 +117,13 @@ for j, file in enumerate(files):
             if not l:
                 container.button("ダウンロード準備中...", disabled=True)
             else:
-            st.download_button(
-                label='ダウンロード',
-                data=l[0],
-                file_name=l[1],
-                mime='application/pdf',
-                key = 'download' + str(j)
-            )
+                st.download_button(
+                    label='ダウンロード',
+                    data=l[0],
+                    file_name=l[1],
+                    mime='application/pdf',
+                    key = 'download' + str(j)
+                )
             time.sleep(3)
             l = pdfforPrint(file, muki, f_name, hyoushi, ura)
             if not l:
