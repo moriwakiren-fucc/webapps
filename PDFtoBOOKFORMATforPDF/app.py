@@ -121,17 +121,17 @@ for j, file in enumerate(files):
             time.sleep(0.2)
             status.update(label="処理が完了しました", state="complete")
         if not l:
-                container.button(
-                    lavel = st.session_state.button_label,
-                    disabled=True,
-                    key = 'predownload_' + str(j)
-                )
-            else:
-                container.download_button(
-                    label = st.session_state.button_label,
-                    data=l[0],
-                    file_name=l[1],
-                    mime='application/pdf',
-                    key = 'download' + str(j)
-                )
+            container.button(
+                lavel = st.session_state.button_label,
+                disabled=True,
+                key = 'predownload_' + str(j)
+            )
+        else:
+            container.download_button(
+                label = st.session_state.button_label,
+                data=l[0],
+                file_name=l[1],
+                mime='application/pdf',
+                key = 'download' + str(j)
+            )
     st.divider()
