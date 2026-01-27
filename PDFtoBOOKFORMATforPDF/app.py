@@ -115,7 +115,11 @@ for j, file in enumerate(files):
         with st.status("処理中", expanded=False) as status:
             l = []
             if not l:
-                container.button("ダウンロード準備中...", disabled=True)
+                container.button(
+                    "ダウンロード準備中...",
+                    disabled=True,
+                    key = 'predownload_' + str(j)
+                )
             else:
                 st.download_button(
                     label='ダウンロード',
@@ -127,7 +131,11 @@ for j, file in enumerate(files):
             time.sleep(3)
             l = pdfforPrint(file, muki, f_name, hyoushi, ura)
             if not l:
-                container.button("ダウンロード準備中...", disabled=True)
+                container.button(
+                    "ダウンロード準備中...",
+                    disabled=True,
+                    key = 'predownload_' + str(j)
+                )
             else:
                 st.download_button(
                     label='ダウンロード',
