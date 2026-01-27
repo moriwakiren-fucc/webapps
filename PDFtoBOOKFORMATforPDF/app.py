@@ -129,7 +129,7 @@ for j, file in enumerate(files):
                     mime='application/pdf',
                     key = 'download' + str(j)
                 )
-                l = pdfforPrint(file, muki, f_name, hyoushi, ura)
+            l = pdfforPrint(file, muki, f_name, hyoushi, ura)
             time.sleep(0.2)
             status.update(label="処理が完了しました", state="complete")
         if not l:
@@ -146,5 +146,4 @@ for j, file in enumerate(files):
                 mime='application/pdf',
                 key = 'download_1_' + str(j)
             )
-            l = pdfforPrint(file, muki, f_name, hyoushi, ura)
         st.divider()
