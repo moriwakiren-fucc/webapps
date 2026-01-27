@@ -127,24 +127,23 @@ for j, file in enumerate(files):
                     data=l[0],
                     file_name=l[1],
                     mime='application/pdf',
-                    key = 'download' + str(j)
+                    key = 'download_' + str(j)
                 )
             l = pdfforPrint(file, muki, f_name, hyoushi, ura)
             time.sleep(0.2)
-            container.empty()
+            if not l:
+                container.button(
+                    label = "処理中",
+                    disabled=True,
+                    key = 'predownload_1' + str(j)
+                )
+            else:
+                container.download_button(
+                    label = "ダウンロード",
+                    data=l[0],
+                    file_name=l[1],
+                    mime='application/pdf',
+                    key = 'download_' + str(j)
+                )
             status.update(label="処理が完了しました", state="complete")
-        if not l:
-            container.button(
-                label = "処理中",
-                disabled=True,
-                key = 'predownload_1_1' + str(j)
-            )
-        else:
-            container.download_button(
-                label = "ダウンロード",
-                data=l[0],
-                file_name=l[1],
-                mime='application/pdf',
-                key = 'download_1_' + str(j)
-            )
         st.divider()
