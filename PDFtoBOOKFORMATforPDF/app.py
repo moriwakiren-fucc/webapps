@@ -113,8 +113,8 @@ for j, file in enumerate(files):
         container.write('')
         l = []
         with st.status("処理中", expanded=False) as status:
-            st.session_state.button_label = "ダウンロード中..."
             l = []
+            st.session_state.button_label = "ダウンロード中..."
             time.sleep(3)
             l = pdfforPrint(file, muki, f_name, hyoushi, ura)
             st.session_state.button_label = "ダウンロード完了！(再ダウンロード)"
