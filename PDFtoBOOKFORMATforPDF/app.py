@@ -110,11 +110,12 @@ for j, file in enumerate(files):
         else:
             text = "PDF処理が完了しました。"
         container = st.container()
+        container.write('a')
         l = []
         with st.status("処理中", expanded=False) as status:
             l = pdfforPrint(file, muki, f_name, hyoushi, ura)
             time.sleep(0.2)
-            status.update(label=text, state="complete")
+            status.update(label="処理が完了しました", state="complete")
         with container:
             st.download_button(
                 label='ダウンロード',
