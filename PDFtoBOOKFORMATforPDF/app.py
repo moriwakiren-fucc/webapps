@@ -126,6 +126,8 @@ for j, file in enumerate(files):
             )
             time.sleep(3)
             l = pdfforPrint(file, muki, f_name, hyoushi, ura)
+            if not l:
+                container.button("ダウンロード準備中...", disabled=True)
             else:
                 st.download_button(
                     label='ダウンロード',
