@@ -131,6 +131,7 @@ for j, file in enumerate(files):
                 )
             l = pdfforPrint(file, muki, f_name, hyoushi, ura)
             time.sleep(0.2)
+            container.empty()
             status.update(label="処理が完了しました", state="complete")
         if not l:
             container.button(
