@@ -83,15 +83,15 @@ for j, file in enumerate(files):
             idx = 1
         else:
             idx = 0
+        f_name = st.text_input('ファイル名のうち、\' .pdf \'よりも前の部分を入力',
+                             value=f'{file.name[:-4]}_BookFormat',
+                             key = 'name' + str(j))
         option = st.radio(
             '向きを指定',
             ('左→右(横書き)', '右→左(縦書き)'),
             index = idx,
             key = 'muki' + str(j)
         )
-        f_name = st.text_input('ファイル名のうち、\' .pdf \'よりも前の部分を入力',
-                             value=f'{file.name[:-4]}_BookFormat',
-                             key = 'name' + str(j))
         hyoushi = st.checkbox('表紙を追加',
                               key = 'hyoushi' + str(j))
         ura = st.checkbox('最終ページを必ず白紙にする',
