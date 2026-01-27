@@ -117,7 +117,7 @@ for j, file in enumerate(files):
             time.sleep(3)
         if not l:
             container.button(
-                lavel = "処理中",
+                label = "処理中",
                 disabled=True,
                 key = 'predownload_' + str(j)
             )
