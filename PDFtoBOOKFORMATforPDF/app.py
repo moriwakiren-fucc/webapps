@@ -120,7 +120,7 @@ for j, file in enumerate(files):
             status.update(label="処理が完了しました", state="complete")
         if not l:
             container.button(
-                lavel = #処理中",
+                lavel = "処理中",
                 disabled=True,
                 key = 'predownload_' + str(j)
             )
