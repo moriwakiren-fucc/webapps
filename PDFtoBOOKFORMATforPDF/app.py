@@ -119,7 +119,9 @@ for j, file in enumerate(files):
             time.sleep(0.2)
             status.update(label="処理が完了しました", state="complete")
         with container:
-            if l:
+            if not l:
+                button_placeholder.button("ダウンロード準備中...", disabled=True)
+            else:
                 st.download_button(
                     label='ダウンロード',
                     data=l[0],
