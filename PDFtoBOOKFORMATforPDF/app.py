@@ -132,4 +132,19 @@ for j, file in enumerate(files):
                 l = pdfforPrint(file, muki, f_name, hyoushi, ura)
             time.sleep(0.2)
             status.update(label="処理が完了しました", state="complete")
+        if not l:
+            container.button(
+                label = "処理中",
+                disabled=True,
+                key = 'predownload_' + str(j)
+            )
+        else:
+            container.download_button(
+                label = "ダウンロード",
+                data=l[0],
+                file_name=l[1],
+                mime='application/pdf',
+                key = 'download' + str(j)
+            )
+            l = pdfforPrint(file, muki, f_name, hyoushi, ura)
         st.divider()
