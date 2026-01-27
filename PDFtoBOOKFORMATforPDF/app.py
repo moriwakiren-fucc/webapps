@@ -114,21 +114,19 @@ for j, file in enumerate(files):
         l = []
         with st.status("処理中", expanded=False) as status:
             l = []
-            st.session_state.button_label = "ダウンロード中..."
             time.sleep(3)
             l = pdfforPrint(file, muki, f_name, hyoushi, ura)
-            st.session_state.button_label = "ダウンロード完了！(再ダウンロード)"
             time.sleep(0.2)
             status.update(label="処理が完了しました", state="complete")
         if not l:
             container.button(
-                lavel = st.session_state.button_label,
+                lavel = #処理中",
                 disabled=True,
                 key = 'predownload_' + str(j)
             )
         else:
             container.download_button(
-                label = st.session_state.button_label,
+                label = "ダウンロード",
                 data=l[0],
                 file_name=l[1],
                 mime='application/pdf',
