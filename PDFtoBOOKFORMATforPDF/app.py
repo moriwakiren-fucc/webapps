@@ -118,7 +118,9 @@ for j, file in enumerate(files):
             time.sleep(3)
             l = pdfforPrint(file, muki, f_name, hyoushi, ura)
             st.session_state.button_label = "ダウンロード完了！(再ダウンロード)"
-            if not l:
+            time.sleep(0.2)
+            status.update(label="処理が完了しました", state="complete")
+        if not l:
                 container.button(
                     lavel = st.session_state.button_label,
                     disabled=True,
@@ -132,6 +134,4 @@ for j, file in enumerate(files):
                     mime='application/pdf',
                     key = 'download' + str(j)
                 )
-            time.sleep(0.2)
-            status.update(label="処理が完了しました", state="complete")
     st.divider()
