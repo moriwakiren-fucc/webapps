@@ -101,4 +101,50 @@ elif page == "edit" and qid:
     required = st.checkbox("必須")
 
     if st.button("質問を追加"):
-        col = ws.max_column + 1 if ws_
+        col = ws.max_column + 1 if ws.max_column >= 2 else 2
+        ws.cell(row=1, column=col, value=q_type)
+        ws.cell(row=2, column=col, value=f"{q_text}\n[必須]" if required else q_text)
+        wb.save(EXCEL_FILE)
+        st.success("質問を追加しました")
+
+# ====================
+# 結果・集計ページ
+# ====================
+elif page == "result" and qid:
+    wb = get_wb()
+    ws_top = wb["TOP"]
+
+    record = None
+    for row in ws_top.iter_rows(min_row=2, values_only=True):
+        if row[1] == qid:
+            record = row
+            break
+
+    if not record:
+        st.error("IDが存在しません")
+        st.stop()
+
+    if not record[4]:
+        pw = st.text_input("パスワード", type="password")
+        if pw != record[2]:
+            st.warning("パスワードが必要です")
+            st.stop()
+
+    ws = wb[qid]
+
+    st.title(f"結果一覧：{record[0]}")
+
+    data = []
+    headers = []
+
+    for col in range(2, ws.max_column + 1):
+        headers.append(ws.cell(row=2, column=col).value)
+
+    for row in range(3, ws.max_row + 1):
+        data.append([ws.cell(row=row, column=col).value for col in range(2, ws.max_column + 1)])
+
+    if data:
+        df = pd.DataFrame(data, columns=headers)
+        st.dataframe(df)
+    else:
+        st.info("まだ回答がありません")
