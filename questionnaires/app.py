@@ -27,40 +27,21 @@ def get_wb():
         wb.save(EXCEL_FILE)
     return load_workbook(EXCEL_FILE)
 
-# ====================
-# 作成ページ
-# ====================
-if page == "make_new":
-    st.title("アンケート新規作成")
-    st.write("ここは make_new ページです")
+# --------------------
+# URL解析（必ず最初）
+# --------------------
+params = st.query_params
 
-# ====================
-# 編集ページ
-# ====================
-elif page == "edit":
-    if not qid:
-        st.error("IDが指定されていません")
-        st.stop()
-    st.title("編集ページ")
+def normalize(v):
+    if isinstance(v, list):
+        return v[0]
+    return v
 
-# ====================
-# 結果ページ
-# ====================
-elif page == "result":
-    if not qid:
-        st.error("IDが指定されていません")
-        st.stop()
-    st.title("結果ページ")
+page = normalize(params.get("page"))
+qid = normalize(params.get("id"))
 
-# ====================
-# 不正URL
-# ====================
-else:
-    st.error("不正なページ指定です")
-
-qid = params.get("id")
-if isinstance(qid, list):
-    qid = qid[0]
+if page is None:
+    page = "make_new"
 
 # ====================
 # 作成ページ
@@ -95,7 +76,11 @@ if page == "make_new":
 # ====================
 # 編集ページ
 # ====================
-elif page == "edit" and qid:
+elif page == "edit":
+    if not qid:
+        st.error("IDが指定されていません")
+        st.stop()
+
     wb = get_wb()
     ws_top = wb["TOP"]
 
@@ -138,7 +123,11 @@ elif page == "edit" and qid:
 # ====================
 # 結果ページ
 # ====================
-elif page == "result" and qid:
+elif page == "result":
+    if not qid:
+        st.error("IDが指定されていません")
+        st.stop()
+
     wb = get_wb()
     ws_top = wb["TOP"]
 
@@ -176,3 +165,9 @@ elif page == "result" and qid:
         st.dataframe(df)
     else:
         st.info("まだ回答がありません")
+
+# ====================
+# 不正URL
+# ====================
+else:
+    st.error("不正なページ指定です")
