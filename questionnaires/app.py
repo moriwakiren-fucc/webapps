@@ -27,16 +27,36 @@ def get_wb():
         wb.save(EXCEL_FILE)
     return load_workbook(EXCEL_FILE)
 
-# --------------------
-# URL解析（修正版）
-# --------------------
-params = st.query_params
+# ====================
+# 作成ページ
+# ====================
+if page == "make_new":
+    st.title("アンケート新規作成")
+    st.write("ここは make_new ページです")
 
-page = params.get("page")
-if isinstance(page, list):
-    page = page[0]
-if page is None:
-    page = "make_new"
+# ====================
+# 編集ページ
+# ====================
+elif page == "edit":
+    if not qid:
+        st.error("IDが指定されていません")
+        st.stop()
+    st.title("編集ページ")
+
+# ====================
+# 結果ページ
+# ====================
+elif page == "result":
+    if not qid:
+        st.error("IDが指定されていません")
+        st.stop()
+    st.title("結果ページ")
+
+# ====================
+# 不正URL
+# ====================
+else:
+    st.error("不正なページ指定です")
 
 qid = params.get("id")
 if isinstance(qid, list):
