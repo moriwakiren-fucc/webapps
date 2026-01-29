@@ -28,11 +28,19 @@ def get_wb():
     return load_workbook(EXCEL_FILE)
 
 # --------------------
-# URL解析
+# URL解析（修正版）
 # --------------------
 params = st.query_params
-page = params.get("page", "make_new")
-qid = params.get("id", None)
+
+page = params.get("page")
+if isinstance(page, list):
+    page = page[0]
+if page is None:
+    page = "make_new"
+
+qid = params.get("id")
+if isinstance(qid, list):
+    qid = qid[0]
 
 # ====================
 # 作成ページ
@@ -57,11 +65,11 @@ if page == "make_new":
             new_id = generate_id()
             ws.append([title, new_id, password, one_time, result_free])
 
-            ws_q = wb.create_sheet(new_id)
+            wb.create_sheet(new_id)
             wb.save(EXCEL_FILE)
 
             st.success("作成しました")
-            st.write("編集ページ：")
+            st.write("編集ページURL")
             st.code(f"?page=edit&id={new_id}")
 
 # ====================
@@ -108,7 +116,7 @@ elif page == "edit" and qid:
         st.success("質問を追加しました")
 
 # ====================
-# 結果・集計ページ
+# 結果ページ
 # ====================
 elif page == "result" and qid:
     wb = get_wb()
@@ -134,8 +142,8 @@ elif page == "result" and qid:
 
     st.title(f"結果一覧：{record[0]}")
 
-    data = []
     headers = []
+    data = []
 
     for col in range(2, ws.max_column + 1):
         headers.append(ws.cell(row=2, column=col).value)
